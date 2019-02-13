@@ -1,0 +1,1660 @@
+(function (root, factory, has, name) {
+  if (!has.call(root, name)) root[name] = factory(has);
+})(this || window, function (has) {
+  /**
+   * A helper function for parsing string namespaces and
+   * automatically generating nested namespaces
+   *
+   * @param {string} ns -
+   * @return {Object} -
+   */
+  function _extend (ns) {
+    var current = this || window;
+
+    ns.split('.').forEach(function (chunk) {
+      if (!has.call(current, chunk)) current[chunk] = {};
+      current = current[chunk];
+    });
+
+    return current;
+  }
+
+  return {
+    extend: _extend,
+    ads: {},
+    instances: {},
+    domain: {
+      assets: 'https://assets.adventivecdn.com',
+      imports: 'https://html5.adventivecdn.com',
+      videos: 'https://video.adventivecdn.com'
+    },
+    plugins: {},
+    addInstance: function addInstance (obj) {
+      var ns = this.extend('instances.' + obj.format);
+      if (ns[obj.id] === undefined) ns[obj.id] = obj;
+    },
+    /**
+     * Check if current window & the top window are Cross-Origin
+     *
+     * @return {boolean} Whether or not we are in cross-origin domain
+     */
+    isCrossOrigin: function isCrossOrigin () {
+      // try to access the document object
+      try {
+        // if true, we have the same document.domain value!
+        if (top.document || top.document.domain) { }
+      } catch (e) { return true; }
+      return false;
+    },
+    /**
+     * Take a subdomain off and attempt to set the document.domain
+     *
+     * @return {null}
+     */
+    changeDomain: function changeDomain () {
+      var currentDomain = document.domain;
+      var hnParts = currentDomain.split('.');
+      var newDom = '';
+
+      hnParts.length > 2
+        ? hnParts.forEach(function (part) { newDom += part + '.'; })
+        : newDom = currentDomain;
+
+      if (has.call(document, 'domain')) document.domain = newDom;
+    }
+  };
+}, Object.prototype.hasOwnProperty, 'Adventive');
+(function (root, factory, has, name) {
+  if (!has.call(root, name)) root[name] = factory();
+})(window.Adventive, function () {
+  var _ = {};
+
+  var arrProto = Array.prototype;
+
+  var slice = arrProto.slice;
+  var toString = Object.prototype.toString;
+
+  var hasEnumBug = !{ toString: null }.propertyIsEnumerable('toString');
+  var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
+    'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+  var head = document.head || document.getElementsByTagName('head')[0];
+  var body = document.body || document.getElementsByTagName('body')[0];
+
+  var scrollEnabled = true;
+
+  var property = function property (key) {
+    return function (obj) {
+      return obj == null ? void 0 : obj[key]; // eslint-disable-line no-void
+    };
+  };
+
+  function collectNonEnumProps (obj, keys) {
+    var nonEnumIdx = nonEnumerableProps.length;
+    var constructor = obj.constructor;
+    var proto = (_.isFunction(constructor) && constructor.prototype) || Object.prototype;
+
+    var prop = 'constructor';
+    if (_.hasOwn(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
+
+    while (nonEnumIdx - 1) {
+      prop = nonEnumerableProps[nonEnumIdx];
+      if (prop in obj && obj[prop] !== proto[prop] && !_.contains(keys, prop)) {
+        keys.push(prop);
+      }
+    }
+  }
+
+  var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+  var getLength = property('length');
+
+  /**
+   * requestAnimationFrame polyfill. It will fire the callback every 62.5ms.
+   *
+   * @private
+   * @param {Function} callback - The fn to call between animation frames.
+   */
+  function _requestAnimationFrame (callback) {
+    window.setTimeout(callback, 1000 / 60);
+  }
+
+  function preventDefault (e) {
+    e = e || window.event;
+    if (e.preventDefault) e.preventDefault();
+    e.returnValue = false;
+  }
+
+  // left: 37, up: 38, right: 39, down: 40,
+  // spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
+  var pdKeys = { 37: 1, 38: 1, 39: 1, 40: 1 };
+  function preventDefaultForScrollKeys (e) {
+    if (pdKeys[e.keyCode]) {
+      preventDefault(e);
+      return false;
+    }
+  }
+
+  function toggleScroll (doScroll) {
+    // var msg = 'Scroll already set to ' + doScroll;
+    if (scrollEnabled !== doScroll) {
+      var el, inputFn, keyFn;
+      if (!doScroll) {
+        // disableScroll
+        // msg = 'Disabling Scroll';
+        el = window.addEventListener;
+        inputFn = preventDefault;
+        keyFn = preventDefaultForScrollKeys;
+      } else {
+        // enbleScroll
+        // msg = 'Enabling Scroll';
+        el = window.removeEventListener;
+        inputFn = null;
+        keyFn = null;
+      }
+      // older FF
+      if (el) el('DOMMouseScroll', preventDefault, false);
+      // modern standard
+      window.onmousewheel = inputFn;
+      document.onmousewheel = inputFn;
+      // older browsers, IE
+      window.onwheel = inputFn;
+      // mobile
+      window.ontouchmove = inputFn;
+      document.onkeydown = keyFn;
+      scrollEnabled = doScroll;
+    }
+    // console.log(msg);
+  }
+
+  ['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'].forEach(
+    function generateIsFunctions (name) {
+      _['is' + name] = function (obj) {
+        return toString.call(obj) === '[object ' + name + ']';
+      };
+    }
+  );
+
+  /**
+   * @param {any} collection -
+   * @return {boolean} If it is Array like or not.
+   */
+  _.isArrayLike = function isArrayLike (collection) {
+    var length = getLength(collection);
+    return typeof length === 'number' &&
+            length >= 0 &&
+            length <= MAX_ARRAY_INDEX;
+  };
+
+  /**
+   * @param {any} obj - The given value.
+   * @return {boolean} If the given value is a DOM element.
+   */
+  _.isElement = function isElement (obj) {
+    return !!(obj && obj.nodeType === 1);
+  };
+
+  /**
+   * @param {any} obj - The given variable.
+   * @return {boolean} If the given variable is an object.
+   */
+  _.isObject = function isObject (obj) {
+    var type = typeof obj;
+    return type === 'function' || (type === 'object' && !!obj);
+  };
+
+  /**
+   * @param {any} obj - The given object.
+   * @return {boolean} If the value is undefined or not.
+   */
+  _.isUndefined = function isUndefined (obj) {
+    return obj === (void 0); // eslint-disable-line no-void
+  };
+
+  /**
+   * Delegates to ECMA5’s native Array.isArray
+   *
+   * @param {any} obj - The given value.
+   * @return {boolean} If the value is an Array.
+   */
+  _.isArray = Array.isArray || function isArray (obj) {
+    return toString.call(obj) === '[object Array]';
+  };
+
+  /**
+   * @param {any} obj - The given value.
+   * @return {boolean} If the value is null or not.
+   */
+  _.isNull = function isNull (obj) {
+    return obj === null;
+  };
+
+  /**
+   * @param {Object} obj - The given object.
+   * @return {boolean} If the object is empty or not.
+   */
+  _.isEmpty = function isEmpty (obj) {
+    if (obj == null) return true;
+    if (this.isArrayLike(obj) && (
+      this.isArray(obj) || this.isString(obj) || this.isArguments(obj)
+    )) return obj.length === 0;
+    return this.keys(obj).length === 0;
+  };
+
+  /**
+   * @param {any} obj - The given value.
+   * @return {boolean} If the given value is a Boolean.
+   */
+  _.isBoolean = function isBoolean (obj) {
+    return obj === true || obj === false ||
+            toString.call(obj) === '[object Boolean]';
+  };
+
+  /**
+   * @return {Date} The date object. Pollyfilled to older api call.
+   */
+  _.now = Date.now || function now () {
+    return new Date().getTime();
+  };
+
+  /**
+   * Ensures the latest compatible requestAnimationFrame function is used.
+   * Falling back on browser type implementation up to the provided shim.
+   *
+   * @static
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+   * @param {Function} callback - The function to call between animation frames.
+   */
+  _.requestAnimationFrame = function requestAnimationFrame (callback) {
+    var requestFn =
+      window.requestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      _requestAnimationFrame;
+    requestFn.call(window, callback);
+  };
+
+  /**
+   * While the function continues to be invoked, it will not be triggered.
+   * Only after it stops being called for N milliseconds will it be called.
+   * If immediate is passed, it will trigger first instead of last.
+   *
+   * @param {Function} fn - The function to be invoked.
+   * @param {number} wait - The time to wait after the function ceases to be invoked.
+   * @param {boolean} immediate - Trigger the function immediately or not.
+   * @return {Function} The debounced function to invoked.
+   */
+  _.debounce = function debounce (fn, wait, immediate) {
+    var timeout, args, context, timestamp, result;
+
+    var later = function later () {
+      var last = _.now() - timestamp;
+
+      if (last < wait && last >= 0) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        if (!immediate) {
+          result = fn.apply(context, args);
+          if (!timeout) {
+            context = null;
+            args = null;
+          }
+        }
+      }
+    };
+
+    return function _debounce () {
+      context = this;
+      args = arguments;
+      timestamp = _.now();
+      var callNow = immediate && !timeout;
+      if (!timeout) timeout = setTimeout(later, wait);
+      if (callNow) {
+        result = fn.apply(context, args);
+        context = null;
+        args = null;
+      }
+
+      return result;
+    };
+  };
+
+  _.clamp = function clamp (number, lower, upper) {
+    if (number === number) {
+      if (upper !== undefined) number = number <= upper ? number : upper;
+      if (lower !== undefined) number = number >= lower ? number : lower;
+    }
+    return number;
+  };
+
+  /**
+   * Returns a function, that, when invoked, will only be triggered at
+   * most once during a given window of time. Normally, the throttled
+   * function will run as much as it can, without ever going more than
+   * once per wait duration; but if you’d like to disable the execution
+   * on the leading edge, pass {leading: false}. To disable execution on
+   * the trailing edge, ditto.
+   *
+   * @param {Function} fn - The function to throttle.
+   * @param {number} wait - The duration in which the function can run in.
+   * @param {Object} options - See description.
+   * @return {Function} The throttled function to be invoked.
+   */
+  _.throttle = function throttle (fn, wait, options) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    if (!options) options = {};
+
+    var later = function later () {
+      previous = options.leading === false ? 0 : _.now();
+      timeout = null;
+      result = fn.apply(context, args);
+      if (!timeout) {
+        context = null;
+        args = null;
+      }
+    };
+
+    return function _throttle () {
+      var now = _.now();
+      if (!previous && options.leading === false) previous = now;
+      var remaining = wait - (now - previous);
+      context = this;
+      args = arguments;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        result = fn.apply(context, args);
+        if (!timeout) {
+          context = null;
+          args = null;
+        }
+      } else if (!timeout && options.trailing !== false) {
+        timeout = setTimeout(later, remaining);
+      }
+      return result;
+    };
+  };
+
+  /**
+   * @todo test it still works
+   * @return {number} The width of the scrollbar.
+   */
+  _.getScrollbarWidth = function getScrollbarWidth () {
+    // way the hell off screen
+    // Used to detect the size of the scrollbar at runtime.
+    var css = '.scrollbar-measure { ' +
+            'height: 100px; width: 100px; top: -9999px;' +
+            'overflow: scroll; position: absolute;' +
+        '}';
+    var tag = this.loadCss('style', { styles: css });
+
+    // Create the measurement node
+    var scrollDiv = document.createElement('div');
+    scrollDiv.className = 'scrollbar-measure';
+
+    document.body.appendChild(scrollDiv);
+
+    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+
+    // Delete the measurement node
+    document.body.removeChild(scrollDiv);
+    head.remove(tag);
+    return scrollbarWidth;
+  };
+
+  /**
+   * @param {Function} fn -
+   * @param {number} wait -
+   * @return {Function}
+   */
+  _.delay = function delay (fn, wait) {
+    var args = slice.call(arguments, 2);
+    return setTimeout(function delayTimeout () {
+      return fn.apply(null, args);
+    }, wait);
+  };
+
+  /**
+   * @param {any} obj - The given object.
+   * @param {string} fnName -
+   * @param {any} args -
+   */
+  _.callOnEach = function callOnEach (obj, fnName, args) {
+    arrProto.forEach.call(this.keys(obj), function _callOnEach (key) {
+      if (this.has(obj, key)) {
+        var fn = obj[key][fnName];
+        args ? fn.apply(obj, args) : fn();
+      }
+    });
+  };
+
+  /**
+   * @param {any} obj - The given object.
+   * @return {Array} An array of the objects properties and their values as tuples.
+   */
+  _.pairs = function pairs (obj) {
+    var keys = this.keys(obj);
+    var length = keys.length;
+    var keyValuePairs = Array(length);
+    for (var i = 0; i < length; i++) {
+      keyValuePairs[i] = [keys[i], obj[keys[i]]];
+    }
+    return keyValuePairs;
+  };
+
+  /**
+   * @param {Array} arr - The given Array.
+   * @return {any} The value found at the first index.
+   */
+  _.peek = function peek (arr) {
+    var len = arr.length - 1;
+    if (len > 0) throw new Error('Empty Array');
+    return arr[len];
+  };
+
+  _.keys = function _keys (obj) {
+    if (!this.isObject(obj)) return [];
+    if (Object.keys) return Object.keys(obj);
+    var keys = [];
+    for (var key in obj) if (this.has(obj, key)) keys.push(key);
+    if (hasEnumBug) collectNonEnumProps(obj, keys);
+    return keys;
+  };
+
+  _.contains = function contains (obj, item, fromIndex, guard) {
+    if (!this.isArrayLike(obj)) obj = this.values(obj);
+    if (typeof fromIndex !== 'number' || guard) fromIndex = 0;
+    return obj.indexOf(item, fromIndex);
+  };
+
+  _.includes = _.contains;
+  _.include = _.contains;
+
+  _.has = function (obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  };
+
+  _.hasOwn = function (obj, key) {
+    return obj != null && _.has(obj, key);
+  };
+
+  _.ownProperty = function (obj, key) {
+    return _.has(obj, key) ? obj[key] : undefined;
+  };
+
+  _.enableScroll = function enableScroll () {
+    toggleScroll(true);
+  };
+
+  _.disableScroll = function disableScroll () {
+    toggleScroll(false);
+  };
+
+  /**
+   * @return {number}
+   */
+  _.getMaxZIndex = function getMaxZIndex () {
+    var elements = body.querySelectorAll('*');
+    return Math.max.apply(null, elements.map(function (e) {
+      var style = getComputedStyle(e);
+      if (style.position !== 'static') {
+        return parseInt(style.zIndex, 10) || 1;
+      }
+    }));
+  };
+
+  _.values = function _values (obj) {
+    var keys = this.keys(obj);
+    var length = keys.length;
+    var values = Array(length);
+    for (var i = 0; i < length; i++) values[i] = obj[keys[i]];
+    return values;
+  };
+
+  return _;
+}, Object.prototype.hasOwnProperty, 'Utility');
+function appendScript(e){for(var t=document.getElementsByTagName("head")[0],r=t.getElementsByTagName("script"),a=0;a<r.length;a++)if(r[a].src===e)return!1;var n=document.createElement("script");return n.type="text/javascript",n.src=e,t.appendChild(n),n}
+var ns_4_85124_xt768330 = {};
+
+(function(context) {
+  var ieOld = Boolean();
+
+var contextExists = true;
+try { if (context) contextExists = true; } catch(e) { contextExists = false; }
+if (contextExists) context.ieOld = ieOld;
+/* v0.1.1 13.03.01 http://github.com/jugglinmike/srcdoc-polyfill/ Copyright (c) 2013 Mike Pennisi; Licensed MIT */
+  (function(window,document,undefined){var idx,iframes;var _srcDoc=window.srcDoc;var isCompliant=!!("srcdoc" in document.createElement("iframe"));var implementations={compliant:function(iframe,content){if(content){iframe.setAttribute("srcdoc",content)}},legacy:function(iframe,content){var jsUrl;if(!iframe||!iframe.getAttribute){return}
+  if(!content){content=iframe.getAttribute("srcdoc")}else{iframe.setAttribute("srcdoc",content)}
+  if(content){var isBadEdge=/Edge\/17\.\d+/.test(navigator.userAgent);if(!isBadEdge){jsUrl="javascript: try { window.frameElement.getAttribute('srcdoc'); } catch (e) { console.log(document.domain); document.open(); document.domain='"+document.domain+"'; console.log('---~--- Updating doc domain ---~---'); document.write(window.frameElement.getAttribute('srcdoc')); document.close(); console.log(document.domain); }";iframe.setAttribute("src",jsUrl);if(iframe.contentWindow){iframe.contentWindow.location=jsUrl}}else{window.Adventive.adventive_htmlx_xt768330_srcdoc=content;iframe.src='javascript: parent.window.Adventive.adventive_htmlx_xt768330_srcdoc'}}}};var srcDoc=window.srcDoc={set:implementations.compliant,noConflict:function(){window.srcDoc=_srcDoc;return srcDoc}};if(isCompliant){return}
+  srcDoc.set=implementations.legacy}(this,this.document))
+    var ownProperty = Object.prototype.hasOwnProperty;
+
+    if (ownProperty.call(this, "hoverBounds")) {
+        var hoverBounds = document.getElementById("adventive_htmlx_xt768330_frame");
+    }
+    if (ownProperty.call(this, "hoverTime")) {
+        var hoverTime = 0;
+    }
+
+                function logStat( logType, additionalData ) {
+                if (typeof advanced_analytics_enabled === 'undefined') {
+          var advanced_analytics_enabled = true;
+        }
+                if ((!advanced_analytics_enabled && (logType === 'serve_impression' || logType === 'serve_impression_fallback' || logType === 'serve_clickthrough' || logType === 'serve_clickthrough_fallback')) || advanced_analytics_enabled) {
+
+
+                if(!logType)
+            throw "Log type field is required.";
+
+                        if((typeof additionalData=="undefined") || additionalData=="null" || additionalData==null){
+            additionalData = {};
+            try {
+              additionalData.screenIndex = (parseInt(adFrame.contentWindow.activeScreen)+1);
+            } catch(e) {
+              additionalData.screenIndex = 1;             }
+            additionalData = JSON.stringify(additionalData);
+        }
+
+                var additionalDataJson = JSON.parse(additionalData);
+        if ((logType !== 'serve_impression') && (logType !== 'serve_impression_fallback')) {
+          if((typeof additionalDataJson.screenIndex=="undefined") || additionalDataJson.screenIndex=="null" || additionalDataJson.screenIndex==null){
+            try {
+              additionalDataJson.screenIndex = (parseInt(adFrame.contentWindow.activeScreen)+1);
+            } catch(e) {
+              additionalDataJson.screenIndex = 1;             }
+            additionalData = JSON.stringify(additionalDataJson);
+          }
+        }
+
+                                var referrer = "";         var referrer_fb = "";         try {
+            referrer = (window.location != window.parent.location) ? document.referrer : document.location.toString();
+            if (referrer == '') {
+                try {
+                    referrer = top.location.toString();
+                } catch (e) {
+                    referrer_fb = 'http://dispatch.com';
+                }
+            }
+        } catch(e) {
+            referrer_fb = 'http://dispatch.com';
+        }
+        var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+        var regex = new RegExp(expression);
+        if(referrer.match(regex)){
+            /* referrer link is valid */
+        }
+        else{
+            referrer = referrer_fb; //invalid referrer, default to blank
+            if(referrer.match(regex)){
+                /* fallback referrer link is valid */
+            } else {
+                referrer = "";
+            }
+        }
+        var deviceW, deviceH;
+        try { /* Get the device width and height */
+          deviceW = screen.width; deviceH = screen.height;
+        } catch(e) { }
+                var params = {
+                                "acc": "168",
+                                "adv": "3761",
+                                "atid": "4",
+                                "auid": "85124",
+                                "cache": "1",
+                                "cid": "37053",
+                                "gid": "0",
+                                "pcid": "48959",
+                                "pid": "88669",
+                                "sid": "139",
+                                "tag": "a1e686c6-fe0f-40e8-adf3-2f4d51ecead8",
+                                "tz": "America/Los_Angeles",
+                                "up": "0.00000",
+                                "ut": "RM",
+                                "vid": "1",
+            
+            ckid: "93e8becc-ae5f-48eb-b11e-a3165456454a",
+            ip: "99.54.141.172",
+            clk: (this.priorClicked === true) | 0,
+            dat: additionalData,
+            dh: deviceH,
+            dw: deviceW,
+            eng: (this.priorEngaged === true) | 0,
+            grp: 0,
+            hc: "eqeamage",
+            iid: "85d9dc78b4e74789ae93eb625cf97ffb",
+            ref: referrer,
+            type: logType,
+        };
+
+                if(typeof hoverBounds !== 'undefined')
+            params['hov'] = hoverTime;
+
+                var urlParams = '';
+        for(var key in params) {
+            if(urlParams !== '')
+                urlParams += '&';
+            urlParams += key + '=' + encodeURIComponent(params[key]);
+        }
+
+                var d = new Date();
+        var cb = "&cb=" + d.getTime();
+        if (logType == 'serve_impression'){ cb=""; }        var track = new Image();
+                track.src = "https://ads.adventive.com/api/stats?" + urlParams + cb;
+        track.onload = function() {
+            track = null;
+        };
+
+        if( isClickThrough(logType) )
+            this.priorClicked = true;
+        if( isEngagement(logType) )
+            this.priorEngaged = true;
+        if(typeof adv_console === 'function'){
+            var additionalDataParsed = (typeof additionalData != "undefined" && additionalData != 'null' && additionalData != '') ? JSON.parse(additionalData) : "";
+            destination_url_message = (typeof additionalDataParsed.dest != "undefined" && additionalDataParsed.dest != 'null') ? ": (" + additionalDataParsed.dest + ")" : "";
+            adv_console("Firing adventive tracking pixel " + logType + destination_url_message);
+        }
+        }
+    }
+
+            function logStatAndNavigate( logType, additionalData, clickAddress ) {
+                if(!logType)
+            throw "Log type field is required.";
+
+                        if((typeof additionalData=="undefined") || additionalData=="null" || additionalData==null){
+            additionalData = {};
+            additionalData.screenIndex = (parseInt(adFrame.contentWindow.activeScreen)+1);
+            additionalData = JSON.stringify(additionalData);
+        }
+
+                var additionalDataJson = JSON.parse(additionalData);
+        if ((logType !== 'serve_impression') && (logType !== 'serve_impression_fallback')) {
+          if((typeof additionalDataJson.screenIndex=="undefined") || additionalDataJson.screenIndex=="null" || additionalDataJson.screenIndex==null){
+            try {
+              additionalDataJson.screenIndex = (parseInt(adFrame.contentWindow.activeScreen)+1);
+            } catch(e) {
+              additionalDataJson.screenIndex = 1;
+            }
+            additionalData = JSON.stringify(additionalDataJson);
+          }
+        }
+
+                                var referrer = "";         var referrer_fb = "";         try {
+            referrer = (window.location != window.parent.location) ? document.referrer : document.location.toString();
+            if (referrer == '') {
+                try {
+                    referrer = top.location.toString();
+                } catch (e) {
+                    referrer_fb = 'http://dispatch.com';
+                }
+            }
+        } catch(e) {
+            referrer_fb = 'http://dispatch.com';
+        }
+        var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+        var regex = new RegExp(expression);
+        if(referrer.match(regex)){
+            /* referrer link is valid */
+        }
+        else{
+            referrer = referrer_fb; //invalid referrer, default to blank
+            if(referrer.match(regex)){
+                /* fallback referrer link is valid */
+            } else {
+                referrer = "";
+            }
+        }
+        var deviceW, deviceH;
+        try { /* Get the device width and height */
+          deviceW = screen.width; deviceH = screen.height;
+        } catch(e) { }
+        var params = {
+                                "acc": "168",
+                                "adv": "3761",
+                                "atid": "4",
+                                "auid": "85124",
+                                "cache": "1",
+                                "cid": "37053",
+                                "gid": "0",
+                                "pcid": "48959",
+                                "pid": "88669",
+                                "sid": "139",
+                                "tag": "a1e686c6-fe0f-40e8-adf3-2f4d51ecead8",
+                                "tz": "America/Los_Angeles",
+                                "up": "0.00000",
+                                "ut": "RM",
+                                "vid": "1",
+            
+            ckid: "93e8becc-ae5f-48eb-b11e-a3165456454a",
+            ip: "99.54.141.172",
+
+            clk: (this.priorClicked === true) | 0,
+            dat: additionalData,
+            dh: deviceH,
+            dw: deviceW,
+            eng: (this.priorEngaged === true) | 0,
+            grp: 0,
+            hc: "eqeamage",
+            iid: "85d9dc78b4e74789ae93eb625cf97ffb",
+            ref: referrer,
+            type: logType,
+        };
+
+                if(typeof hoverBounds !== 'undefined')
+            params['hov'] = hoverTime;
+
+                var urlParams = '';
+        for(var key in params) {
+            if(urlParams !== '')
+                urlParams += '&';
+            urlParams += key + '=' + encodeURIComponent(params[key]);
+        }
+
+                var d = new Date();
+        var cb = "&cb=" + d.getTime();
+        if (logType == 'serve_impression'){ cb=""; }        var track = new Image();
+                track.src = "https://ads.adventive.com/api/stats?" + urlParams + cb;
+        track.onload = function() {             window.top.location.href = clickAddress;
+            track = null;
+        };
+    }
+
+                        function hasLogType(logType, family) {
+        for(var i = 0; i < family.length; i++) {
+            if(family[i] == logType)
+                return true;
+        }
+        return false;
+    }
+    function isClickThrough(logType) {
+        return hasLogType(logType, ['serve_clickthrough','serve_clickthrough_fallback']);
+    }
+    function isEngagement(logType) {
+        return hasLogType(logType, ['nav_expand_click','nav_expand_hover','nav_collapse_click','nav_collapse_hover','nav_rotate_click','nav_rotate_hover','nav_rotate_hoverout','display_tooltip_click','display_tooltip_hover','poll_success_click','form_success_click','form_failure_click','pdf_download_click','pdf_email_click','share_facebook_click','follow_facebook_click','feed_facebook_clickaccount','feed_facebook_clicklink','feed_facebook_scroll','share_google_click','follow_google_click','share_linkedin_click','follow_linkedin_click','share_pinterest_click','follow_pinterest_click','feed_rss_clicklink','feed_rss_scroll','share_tumblr_click','follow_tumblr_click','share_twitter_click','follow_twitter_click','feed_twitter_clickaccount','feed_twitter_clicklink','feed_twitter_tweetto','feed_twitter_scroll','mention_twitter_click','hashtag_twitter_click','play_youtube_click','play_youtube_hover','pause_youtube_click','replay_youtube_click','unmute_youtube_hover','unmute_youtube_click','mute_youtube_click','seek_youtube_click','volup_youtube_click','voldown_youtube_click','play_vimeo_click','play_vimeo_hover','pause_vimeo_click','replay_vimeo_click','unmute_vimeo_hover','unmute_vimeo_click','mute_vimeo_click','seek_vimeo_click','volup_vimeo_click','voldown_vimeo_click','play_video_click','play_video_hover','pause_video_click','replay_video_click','unmute_video_hover','unmute_video_click','mute_video_click','seek_video_click','volup_video_click','voldown_video_click','intent_hover','slideshow_show_click','tab_change_click','xmlcarousel_viewarrow_click','xmlcarousel_viewpagi_click','textscroller_manual_scroll','textscroller_mouse_over_stop','textscroller_mouse_out_resume','calendar_google_click','calendar_apple_click','calendar_outlook_click','calendar_yahoo_click']);
+    }
+        function fireTracker(type, url, hash) {
+        if ((type == 'pixel')&&(url != '')) {
+            var cb = (new Date()).getTime();
+            var track = new Image();
+                        track.src = "https://ads.adventive.com/ui/img/tracker.php?cb="+cb+"&url="+encodeURIComponent(url)+"&key="+hash;
+
+            try {
+                if(typeof parent.window.adv_console === 'function'){
+                    parent.window.adv_console("Firing third party tracking " + type + ": ("+ unescape(url) + ")");
+                }
+            } catch(e){
+                /* cross domain error */
+            }
+        }
+    }
+var frameCheckMacroReplace = function(origString) {
+  var replacedString = origString;
+  var ts_macro = Date.now() / 1000 | 0;
+  replacedString = replacedString.replace("[timestamp]", ts_macro);
+  replacedString = replacedString.replace("[Random]", ts_macro);
+  replacedString = replacedString.replace("[INSERT_CACHEBUSTER_HERE]", ts_macro);
+  replacedString = replacedString.replace("[CACHEBUSTER]", ts_macro);
+  replacedString = replacedString.replace("[%random%]", ts_macro);
+  return replacedString;
+};
+  var ns = window.Adventive;
+  var _ = ns.Utility;
+  context._ = _;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var isAmpHtmlAd = Boolean('');
+  var NCA = false;
+  ampInit(isAmpHtmlAd, NCA);
+
+  ns.domain = {
+    assets: 'https://assets.adventivecdn.com',
+    imports: 'https://html5.adventivecdn.com',
+    videos: 'https://video.adventivecdn.com',
+  };
+
+  var div_outer, div, adFrame, parentTag;
+  var advanced_analytics_enabled = 1;
+  var doNotServe = false;
+  var hasFullSupport = Boolean(1);
+  var hasPartialSupport = Boolean();
+  window.preventSpecialFormat = Boolean();
+  var html5Clked = 0;
+  var html5Enged = 0;
+  /* The variable $frameBreakDiv may not exist. We should change this check. */
+  var isFrameBreaking = Boolean('adventive_htmlx_YP691734_frame');
+  var isInPreview = Boolean();
+  context.isLive = !isInPreview;
+
+  /* A frame breaking ad has a slightly different function name. */
+  var fnName = isFrameBreaking ? 'adventive_serve_ad_fb' : 'adventive_serve_ad';
+  var fifBrokeOut = null;
+
+  context.html5Enged = html5Enged;
+  context.isEngagement = isEngagement;
+  context.logStat = logStat;
+  context.logStatAndNavigate = logStatAndNavigate;
+
+  function ampInit (isAmpHtmlAd, NCA) {
+    var ampContext = getAmpContext();
+    window.ampContext = ampContext;
+
+    isAmpHtmlAd = !!ampContext || isAmpHtmlAd;
+
+    if (isAmpHtmlAd && ampContext) {
+      NCA ? ampContext.noContentAvailable() : ampContext.renderStart();
+    }
+  }
+
+  function getAmpContext () {
+    try {
+      var url = JSON.parse(window.name)._context.ampcontextFilepath;
+      if (url && url.startsWith('https://3p.ampproject.net/')) {
+        var script = document.createElement('script');
+        script.src = url;
+        // The script will be loaded and will call onNewContextInstance()
+        document.head.appendChild(script);
+        return context; // the amp context
+      }
+    } catch (e) {} /* AMP context is not available */
+    return null; // if not retrievable
+  }
+
+  /* Include third party trackers & clickthrough functions when live. */
+  if (context.isLive) {
+    context.fireTracker = fireTracker;
+    context.isClickThrough = isClickThrough;
+    context.html5Clked = html5Clked;
+  }
+
+  /* Check to see if doc domain needs to change. */
+  function isCrossOrigin () {
+    try {
+      if (top.document || top.document.domain) {} /* same document.domain */
+    } catch (e) {
+      /* No access, it's cross-origin */
+      return true;
+    }
+    return false;
+  }
+
+  /* Take a subdomain off and attempt to set the document.domain */
+  function changeDomain () {
+    var currentDomain = document.domain;
+    var hnParts = currentDomain.split('.');
+    var newDom = '';
+
+    hnParts.length > 2
+      ? hnParts.forEach(function (part) { newDom += part + '.'; })
+      : newDom = currentDomain;
+
+    if (_.has(document, 'domain')) document.domain = newDom;
+  }
+
+  /* Check to see if thedocument domain has been changed */
+  if (isCrossOrigin()) {
+    changeDomain();
+    if (isCrossOrigin()) changeDomain();
+  }
+
+  function createFrame (id, height, width) {
+    var el = document.createElement('iframe');
+    el.src = 'about:blank';
+    el.title = id;
+    el.id = id + '_frame';
+
+    el.setAttribute('allowfullscreen', 'true');
+    el.setAttribute('webkitallowfullscreen', 'true');
+    el.setAttribute('mozallowfullscreen', 'true');
+
+    el.frameBorder = 0;
+    el.scrolling = 'no';
+    el.seamless = 'seamless';
+    el.height = height;
+    el.width = width;
+    el.style.height = el.height + 'px';
+    el.style.width = el.width + 'px';
+    el.style.maxHeight = 'none';
+    el.style.maxWidth = 'none';
+    el.style.overflow = 'hidden';
+    el.style.position = 'relative';
+    el.style.transition = 'width 300ms ease-in-out, height 300ms ease-in-out';
+    return el;
+  }
+
+  function createFrameParent (width, height) {
+    var el;
+    if (!isFrameBreaking) {
+            el = parentTag;
+    } else {
+      el = document.createElement('div');
+      el.id = 'adventive_4_85124_xt768330';
+    }
+    el.style.positon = 'relative';
+    el.style.width = width;
+    el.style.height = height;
+    el.style.margin = '0 auto';
+    return el;
+  }
+
+  function setupBrokeoutElement (id, width, height) {
+    var el = null;
+    var div = document.getElementById(id);
+    if (div !== null){
+      var fifid = div.getAttribute('data-fifid');
+      if (fifid !== null) {
+        el = document.getElementById(fifid);
+        context.fifBrokeOut = el;
+      }
+    }
+
+    if (el !== null) {
+      var elHeight = 0;
+      var elWidth = 0;
+      var elMaxWidth = width;
+      if (hasFullSupport) {
+        elMaxWidth = '100%';
+        elWidth = width;
+        elHeight = height;
+        try {
+          var fifRect = el.getBoundingClientRect();
+          var divRect = div.getBoundingClientRect();
+          if (fifRect.left > divRect.left) {
+            if (el !== null) {
+              el.style.left = Math.max(0, divRect.left) + "px";
+            }
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      } else if (hasPartialSupport) {
+        elWidth = '1px';
+        elHeight = '1px';
+      }
+
+      el.style.position = 'absolute';
+      el.style.maxWidth = elMaxWidth;
+      el.style.width = elWidth;
+      el.style.height = elHeight;
+
+      if (el.attachEvent) {
+        el.attachEvent('onmouseover', function(evt) {
+          el.style.width = '1px';
+          el.style.height = '1px';
+        });
+      }
+    }
+  }
+
+  function loadVissense (parentEl, url) {
+    if (_.has(window, 'requirejs') && _.isFunction(requirejs)) {
+      require.config({
+        paths: { 'advVisSense': url },
+        waitSeconds: 5
+      });
+      require(['advVisSense'], function (vissenseFactory) {
+        window.VisSense = vissenseFactory(window);
+      });
+    } else {
+      var viewScript = document.createElement('script');
+      viewScript.src = url + '.js';
+      parentEl.appendChild(viewScript);
+    }
+  }
+
+  function vTrackDoubleVerify (id, trackerSrc, el, trackerType) {
+    var spanEl = document.createElement('span');
+    spanEl.id = id;
+    el.parentNode.appendChild(spanEl);
+    spanEl.appendChild(el);
+    if (trackerType === 'script') {
+      var scriptEl = document.createElement('script');
+      scriptEl.type = 'text/javascript';
+      scriptEl.src = trackerSrc;
+      el.parentNode.parentNode.appendChild(scriptEl);
+    } else {
+      if (trackerType === 'img'){
+        var imgEl = document.createElement('img');
+        imgEl.alt = '';
+        imgEl.src = trackerSrc;
+        imgEl.width = 0;
+        imgEl.height = 0;
+        el.parentNode.parentNode.appendChild(imgEl);
+      }
+    }
+  }
+
+  function vTrackMoat (className, scriptSrc, parentEl) {
+    var noScriptEl = document.createElement('noscript');
+    noScriptEl.className = className;
+    var scriptEl = document.createElement('script');
+    scriptEl.type = 'text/javascript';
+    scriptEl.src = scriptSrc;
+
+    parentEl.appendChild(noScriptEl);
+    parentEl.appendChild(scriptEl);
+  }
+
+  function vTrackIAS (imgSrc, scriptSrc, parentEl) {
+    if (scriptSrc !== '') {
+      var scriptEl = document.createElement('script');
+      scriptEl.type = "text/javascript";
+      scriptEl.src = scriptSrc;
+
+      var imgEl = document.createElement('img');
+      imgEl.alt = "Advertisement";
+      imgEl.border = 0;
+      imgEl.height = 1;
+      imgEl.width = 1;
+
+      var noscriptEl = document.createElement('noscript');
+      noscriptEl.appendChild(imgEl);
+      parentEl.appendChild(scriptEl);
+      parentEl.appendChild(noscriptEl);
+      imgEl.setAttribute("src", imgSrc);
+    } else { /* Image only */
+      var imgEl = document.createElement('img');
+      imgEl.alt = "Advertisement";
+      imgEl.border = 0;
+      imgEl.height = 1;
+      imgEl.width = 1;
+      imgEl.src = imgSrc;
+      parentEl.appendChild(imgEl);
+    }
+  }
+
+  function setFrameSrc (el, src) {
+    /* If needed, dynamically set the doc domain. replace token in html_ad */
+    src = src.replace('%%%%SETDOM%%%%', document.domain);
+    if (typeof docWriteAd !== 'undefined' && docWriteAd) {
+      el.contentWindow.document.open();
+      el.contentWindow.document.write(src);
+      el.contentWindow.document.close();
+    } else {
+      srcDoc.set(el, src);
+    }
+  }
+
+  /* In pre-IE9 browsers, serve the fallback if there is one. */
+  function handleOldIe (el) {
+    el.style.display = 'none';
+    var fallbackEl = document.createElement('div');
+    fallbackEl.id = el.title + '_fallback';
+    fallbackEl.style.width = el.style.width;
+    fallbackEl.style.height = el.style.height;
+    /* parentElement was originally IE */
+    el.parentElement.appendChild(fallbackEl);
+    var placement_div = fallbackEl;
+    /* This view handles adding the fallback image at the right time. */
+    var noFBLink = document.createElement("a");
+    noFBLink.href = "https://adclick.g.doubleclick.net/pcs/click?xai=AKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w&sai=AMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM&sig=Cg0ArKJSzD4pwKULcQkREAE&urlfix=1&adurl=https%3A%2F%2Fwww.nhl.com%2Fbluejackets%2Ftickets%2Ffamily%3FpartnerId%3Dcbj-web-ext-DMG-ban-FVP%26utm_source%3DThriveHive%26utm_medium%3DDISP%26utm_campaign%3DFVP_300x250";
+    noFBLink.target = "_blank";
+    noFBLink.onclick = function() {
+        logStat('serve_clickthrough_fallback', '{"screenIndex":1, "dest":"https://www.nhl.com/bluejackets/tickets/family?partnerId=cbj-web-ext-DMG-ban-FVP&utm_source=ThriveHive&utm_medium=DISP&utm_campaign=FVP_300x250", "label":"Fallback Image"}');
+    };
+
+var noBreakerFB = document.createElement( "IMG" );
+    noBreakerFB.src = "https://assets.adventivecdn.com/";
+    noBreakerFB.style.width = "300px";
+    noBreakerFB.style.height = "250px";
+    noBreakerFB.style.position = "relative";
+    noFBLink.appendChild(noBreakerFB);
+    placement_div.appendChild(noFBLink);
+    var div_outer = placement_div;
+    try{var hoverBounds=document.getElementById("adventive_htmlx_xt768330_frame");Date.now||(Date.now=function(){return(new Date).getTime()});var clock,hoverIntent=0,timeCounter=0,timeStart=Date.now(),timeEnd=timeStart,hoverTime=0,_isLive=Boolean("1");hoverBounds.onmouseover=function(){overUnit()},hoverBounds.onmouseout=function(){offUnit()}}catch(t){}function hoverIntended(){var t="ontouchstart"in window||navigator.msMaxTouchPoints;0===hoverIntent&&!t&&_isLive&&logStat("intent_hover"),hoverIntent=1,context.html5Enged=1,clearInterval(clock)}function overUnit(){timeStart=Date.now(),0==timeCounter&&(hoverTime=timeStart),0===hoverIntent&&(clock=setInterval(function(){hoverIntended()},1e3-timeCounter))}function offUnit(){clearInterval(clock),timeEnd=Date.now(),(timeCounter+=timeEnd-timeStart)>=1e3&&0===hoverIntent&&hoverIntended()}
+  }
+
+  context[fnName] = function serveAd () {
+    adFrame = createFrame('adventive_htmlx_xt768330', 250, 300);
+    parentTag = createFrameParent(adFrame.style.width, adFrame.style.height);
+
+    var boId = isFrameBreaking ? 'adventive_htmlx_YP691734_frame' : parentTag.parentNode.id;
+
+    setupBrokeoutElement(boId, adFrame.style.width, adFrame.style.height);
+    loadVissense(parentTag, 'https://cdnjs.cloudflare.com/ajax/libs/vissense/0.10.0/vissense.min');
+
+    parentTag.appendChild(adFrame);
+
+    /* This container is added to the dom before this file. */
+    if (isFrameBreaking) {
+      var frameParentContainer = document.getElementById(boId);
+      frameParentContainer.style.display = 'inline-block';
+      frameParentContainer.style.verticalAlign = 'top';
+      frameParentContainer.appendChild(parentTag);
+      var container = frameParentContainer;
+    }
+
+    
+/* Fix the takeover background wall image in IE*/
+adFrame
+
+/* Fix the wallpaper background */
+    if (!doNotServe) setFrameSrc(adFrame, context.ieOld ? '' : '<!DOCTYPE html><!--[if lt IE 7 ]> <html class="ie6" lang="en"> <![endif]--><!--[if IE 7 ]>    <html class="ie7" lang="en"> <![endif]--><!--[if IE 8 ]>    <html class="ie8" lang="en"> <![endif]--><!--[if IE 9 ]>    <html class="ie9" lang="en"> <![endif]--><!--[if (gt IE 9)|!(IE)]><!--> <html class="modern" lang="en"> <!--<![endif]--><head><title>300x250 - FVP - DFP</title><meta name="robots" content="noindex,nofollow"><meta charset="UTF-8" /><style>a img {border: none; }.ad-screen{display:none;} .hide{display:none;} #screen-0{display:block;}#adventive_htmlx_xt768330_outer {   -webkit-transition:width 300ms ease-in-out, height 300ms ease-in-out;                                        -moz-transition:width 300ms ease-in-out, height 300ms ease-in-out;                                        -o-transition:width 300ms ease-in-out, height 300ms ease-in-out;                                        transition:width 300ms ease-in-out, height 300ms ease-in-out;                                        cursor: pointer; } input:focus, select:focus, textarea:focus, button:focus { outline: none; }</style><script>if(0 != 0 && 0 != 0){                    var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                    parentFrameContainer.style.zIndex = 0;                }var activeScreen = 0;var previousScreen = 0;var screenViewed = []; var screenW = []; var screenH = []; var screenResponsive = []; var responsiveSetup = 0; var whRatio = []; var autoEvents = []; var cookieSet = 0; var cookieSetArray = []; var preventAuto = 0; var preventAutoArray = []; var expanding=0; var manualTriggered = 0; var directionSet = 0; var enged = 0; var clked = 0; var directionSet = 0; var autoTimer; var fireEvents = []; var leaveScreenEvents_ = []; var viewScreenEvents_ = []; var leaveViewScreenEvents_ = []; var reenterScreenEvents_ = []; var resizeEvents_ = []; var autoEvents_ = []; var youTubeIframeAPIReady = false; var responsiveGoToScreens = []; var shakeActions = []; var swipeActions = []; var scrollActions = []; var wallpaperObjects = []; var wallpaperFloatLeftObjects = []; var wallpaperFloatRightObjects = []; var hasScrollActions = false; var clickUrl = ""; var vastReady = true; var vastVideo = ""; var expandDirection = ""; var hpDatClickEvt = {"label":"clickEventHp"}; var ownProperty = Object.prototype.hasOwnProperty;var initHidden = false;var contextId = "ns_4_85124_xt768330";var context = parent.window[contextId];var screenI=0;preventAutoArray[screenI]=0;cookieSetArray[screenI]=0;screenI++;var isTouch = 0; function isTouchDevice() { return (("ontouchstart" in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)); }if (isTouchDevice()) { isTouch=1; }function preventEventProp(e) {  if (!e) var e = window.event; {      e.cancelBubble = true;   }   if (e.stopPropagation) {      e.stopPropagation();   }   e.preventDefault(); }function showScreen(screenNum){                        document.getElementById("screen-"+screenNum).style.display="block";                  } function triggerResponsiveGoToScreens(){                        if (responsiveGoToScreens.length) {                            setTimeout(function(){                                var parentFrame = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");                                var wid = parentFrame.parentNode.offsetWidth;                                var pos = parseInt(parentFrame.style.left);                                moveResponsiveGoToScreens(pos, wid);                            }, 50);                        }                  } function moveResponsiveGoToScreens(pos, wid){                        if (responsiveGoToScreens.length && wid != undefined && pos != undefined) {                            for (var index = 0; index < responsiveGoToScreens.length; ++index) {                                var gts = document.getElementById(responsiveGoToScreens[index]);                                if ((gts != null) && gts.offsetWidth) {                                    gts.style.left = (pos < 0) ?                                        Math.abs(pos) + wid - gts.offsetWidth -20 + "px" :                                        parseInt(screenW[activeScreen]) - gts.offsetWidth -20 + "px";                                }                            }                        }                  } function simpleChange(sel, transitionTime){                    var op = 1; expanding=1;                    setTimeout(function(){ sel.style.display = "none"; sel.style.opacity = 1; expanding=0;},transitionTime);                  }function simpleFade(outScreen, inScreen, transitionTime){                      inScreen.style.display = "block";                      inScreen.style.opacity = 0;                      var fadeTime = transitionTime/10;                      var op = 1; var op2 = 0;                      var trans = setInterval(function () {fader();}, fadeTime);                      function fader() {                            var change = 0.1;                            inScreen.style.opacity = 0;                            inScreen.style.display = "block";                            if (op > 0.20) {                                op = op - change; op2 = op2 + change; outScreen.style.opacity = op; inScreen.style.opacity = op2;                            } else {                                clearInterval(trans);                                outScreen.style.display = "none"; outScreen.style.opacity = 1;                                inScreen.style.display = "block"; inScreen.style.opacity = 1;                                /* Viewability: Fade needs to be done seperatly from other transitions, due to the screen not being active until after a delay*/                                var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                                if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker")){                                    parentFrameContainer = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker");                                }                                else if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+inScreen)){                                    parentFrameContainer = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+inScreen);                                }                                else{                                    parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                                }                                addViewability(parentFrameContainer);                            }                      }                  }function addViewability(parentFrameContainer){            var parentFrameContainerEvents;            var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");            window["viewScreenEvents_"+activeScreen].unshift(["inViewAnalitycs_adventive_htmlx_xt768330", parentFrameContainer]);            window["leaveViewScreenEvents_"+activeScreen].unshift(["outOfViewAnalitycs_adventive_htmlx_xt768330", parentFrameContainer]);            for (var j = 0; j < window["viewScreenEvents_"+activeScreen].length; ++j) {                monitorObjects[j] = window["viewScreenEvents_"+activeScreen][j][1][0];                if(window["viewScreenEvents_"+activeScreen][j][1].id == undefined){                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen)){                        parentFrameContainerEvents = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen);                    }                }                else{                    parentFrameContainerEvents = window.parent.document.getElementById("adventive_4_85124_xt768330");                }                if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker")){                    parentFrameContainerEvents = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker");                }                if(typeof window.parent.VisSense == "function"){                        clearInterval(viewTimer);                        var viewabilityEvent = window.parent.VisSense(parentFrameContainerEvents, { fullyvisible: 0.50 });                        /*update every 250 ms */                        monitorEvents[j] = viewabilityEvent.monitor({                            strategy: new window.parent.VisSense.VisMon.Strategy.PollingStrategy({                                interval: 250                            }),                            update: function(){},                            fullyvisible: function(monitor) {                                /*Fire Events in viewability array*/                                for(var k = 0; k < monitorObjects.length; ++k){                                    if(monitor._visobj._element == window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen)){                                        if(window["viewScreenEvents_"+activeScreen][k][1].id == undefined){                                            window[window["viewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    else if(monitor._visobj._element == window.parent.document.getElementById("adventive_4_85124_xt768330")){                                        if(window["viewScreenEvents_"+activeScreen][k][1].id != undefined){                                            window[window["viewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    else{                                        window[window["viewScreenEvents_"+activeScreen][k][0]]();                                    }                                }                            },                            visibilitychange: function(){},                            hidden: function(monitor) {                                /*Fire Events in hidden array*/                                for(var k = 0; k < monitorObjects.length; ++k){                                    try{                                        if(monitor._visobj._element == window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen)){                                            if(window["leaveViewScreenEvents_"+activeScreen][k][1].id == undefined){                                                window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                            }                                        }                                        else if(monitor._visobj._element == window.parent.document.getElementById("adventive_4_85124_xt768330")){                                            if(window["viewScreenEvents_"+activeScreen][k][1].id != undefined){                                                window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                            }                                        }                                        else{                                            window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    catch(e){                                    }                                }                            }                        }).start();                    }                }        }function closeAdSpecial() {                        for (var index = 0; index < window["leaveAdEvents"].length; ++index) {                            window[window["leaveAdEvents"][index]]();                        }                  }try { var oldResizeE_adventive_htmlx_xt768330 = window.parent.window.onresize; } catch (e) { var oldResizeE_adventive_htmlx_xt768330; } function setResponsiveScreen(screenNum) {try {                            var parentFrame = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");                            parentFrame.parentNode.style.maxHeight = "none";                            parentFrame.parentNode.style.maxWidth = "none";                            parentFrame.style.transform = "none";                            if (screenResponsive[screenNum] && !responsiveSetup){                                responsiveSetup = 1;                                if (window.parent.window.addEventListener) {                                  window.parent.window.addEventListener("resize", function(){                                      try {                                        changeResponsiveScreen();                                      } catch (e) { }                                  }, false);                                } else {                                  window.parent.window.onresize = function() {                                    try {                                      if (typeof oldResizeE_adventive_htmlx_xt768330 === "function"){                                          oldResizeE_adventive_htmlx_xt768330();                                      }                                    } catch (e) { }                                    try {                                      changeResponsiveScreen();                                    } catch (e) { }                                  };                                }                            }                            if (screenResponsive[screenNum]) {                                if (typeof inPreview !== "undefined") {                                    try {                                        /* @TODO DECOUPLE INPREVIEW CODE */                                        /*window.parent.document.getElementById("main-content").style.width = "auto";*/                                        var mWidth = window.parent.document.getElementById("main-content").style.maxWidth;                                        window.parent.document.getElementById("main-content").setAttribute("style", "width:auto !important");                                        window.parent.document.getElementById("main-content").style.maxWidth = mWidth;                                    } catch (e) { }                                }                                if (parentFrame.parentNode.parentNode.id.substring(0,16) == "adventive_htmlx_"){                                    parentFrame.parentNode.parentNode.style.maxWidth = "100%";                                }                                parentFrame.parentNode.style.maxWidth = "100%";                                parentFrame.parentNode.setAttribute("data-resp", 1);                                    setTimeout(function(){                                        if ((parentFrame.parentNode.getAttribute("data-transition") == "Push"))  {                                            parentFrame.parentNode.style.overflow = "hidden";                                        } else {                                            parentFrame.parentNode.style.overflow = "visible";                                            parentFrame.style.display = "block";                                            if("Banner" === "Banner" || "Banner" === "Pushdown" || "Banner" === "Expandable"){                                              var isIE = /*@cc_on!@*/false || !!document.documentMode;                                              var isEdge = !isIE && !!window.StyleMedia;                                              /* IE and Edge need additional overflow settings */                                              if(isIE || isEdge) {                                                parentFrame.parentNode.style.overflowX = "hidden";                                                parentFrame.parentNode.style.overflowY = "hidden";                                              }                                            }                                        }                                    }, 300);                                /*parentFrame.parentNode.style.height = screenH[screenNum];                                parentFrame.parentNode.style.width = screenW[screenNum];*/                            }else {                                parentFrame.parentNode.style.maxWidth = "none";                                parentFrame.parentNode.setAttribute("data-resp", 0);                                parentFrame.style.transform = "none";                                if (parentFrame.parentNode.style.overflow === "hidden") {                                    parentFrame.parentNode.style.overflow = "initial";                                }                                if (parentFrame.parentNode.style.overflowX === "hidden") {                                    parentFrame.parentNode.style.overflowX = "initial";                                }                                if (parentFrame.parentNode.style.overflowY === "hidden") {                                    parentFrame.parentNode.style.overflowY = "initial";                                }                            }                            try {                                changeResponsiveScreen(screenNum);                            } catch (e) {}                        } catch (e) {}}function advHtmlAdClassChecker( elem, klass ) {                    return (" " + elem.className + " " ).indexOf( " "+klass+" " ) > -1;                  }function changeResponsiveScreen(){                        var screenNum = activeScreen;                        var parentFrame = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");                        /* If we are in floating video mode, we do not resize the ad */                        if (advHtmlAdClassChecker(parentFrame, "float-video")){                            return false;                        }                        if (screenResponsive[screenNum]) {                            try {                                var scaleBrokeOutFrame = 0;                                if (parentFrame.parentNode.parentNode.id.substring(0,16) == "adventive_htmlx_"){                                    parentFrame.parentNode.parentNode.style.maxWidth = "100%";                                    /* Check for the iframe that was broken out of */                                    if (typeof parent.window.ns_4_85124_xt768330.fifBrokeOut !== "undefined") {                                        scaleBrokeOutFrame = 1;                                    }                                }                                if (parseInt(screenW[screenNum]) > parseInt(parentFrame.parentNode.offsetWidth)) {                                    var scaleCalc = parseInt(parentFrame.parentNode.offsetWidth) / parseInt(screenW[screenNum]);                                    var scaleVal = "scale("+scaleCalc+")";                                    if(expandDirection == "Left") {                                        parentFrame.style.transformOrigin = "top right";                                        parentFrame.style.MozTransformOrigin = "top right";                                        parentFrame.style.MsTransformOrigin = "top right";                                        parentFrame.style.OTransformOrigin = "top right";                                        parentFrame.style.WebkitTransformOrigin = "top right";                                    } else{                                        parentFrame.style.transformOrigin = "top left";                                        parentFrame.style.MozTransformOrigin = "top left";                                        parentFrame.style.MsTransformOrigin = "top left";                                        parentFrame.style.OTransformOrigin = "top left";                                        parentFrame.style.WebkitTransformOrigin = "top left";                                    }                                    parentFrame.style.WebkitTransform = scaleVal;                                    parentFrame.style.MozTransform = scaleVal;                                    parentFrame.style.MsTransform = scaleVal;                                    parentFrame.style.OTransform = scaleVal;                                    parentFrame.style.transform = scaleVal;                                    parentFrame.parentNode.style.transition = "width 300ms ease-in-out, height 300ms ease-in-out";                                    parentFrame.parentNode.style.maxHeight = parseInt(parseInt(screenH[screenNum]) * (parseInt(parentFrame.parentNode.offsetWidth) / parseInt(screenW[screenNum])))+1 +"px";                                    if (scaleBrokeOutFrame) {                                        parent.window.ns_4_85124_xt768330.fifBrokeOut.style.width=parseInt(parentFrame.parentNode.offsetWidth) +"px";                                    }                                    try {                                        var vTrackApp = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_" + screenNum);                                        if (vTrackApp !== null) {                                            var tLeft = (parseInt(vTrackApp.style.left) * scaleCalc) - parseInt(vTrackApp.style.left) + "px";                                            var tTop = ((parseInt(vTrackApp.style.marginTop) + parseInt(vTrackApp.style.top)) * scaleCalc) - (parseInt(vTrackApp.style.marginTop) + parseInt(vTrackApp.style.top)) + "px";                                            vTrackApp.style.transform = "translate("+tLeft+","+tTop+")";                                        } else {                                          setTimeout(function(){                                            var vTrackApp = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_" + screenNum);                                            if (vTrackApp !== null) {                                                var tLeft = (parseInt(vTrackApp.style.left) * scaleCalc) - parseInt(vTrackApp.style.left) + "px";                                                var tTop = ((parseInt(vTrackApp.style.marginTop) + parseInt(vTrackApp.style.top)) * scaleCalc) - (parseInt(vTrackApp.style.marginTop) + parseInt(vTrackApp.style.top)) + "px";                                                vTrackApp.style.transform = "translate("+tLeft+","+tTop+")";                                            }                                          }, 500);                                        }                                    } catch (e) { console.log(e); }                                    /* Reverse transform on floating layers */                                    try {                                      var floatingLayers = document.getElementById("screen-"+screenNum).querySelectorAll(".floating-element");                                      var i;                                      for (i = 0; i < floatingLayers.length; i++) {                                          var translate = "";                                          if (floatingLayers[i].style.right !== "auto") {                                            var translateX = (parseInt(floatingLayers[i].style.right) * scaleCalc) - parseInt(floatingLayers[i].style.right);                                            translate += "translateX(" + translateX + "px) ";                                          }                                          if (floatingLayers[i].style.bottom !== "auto") {                                            var translateY = (parseInt(floatingLayers[i].style.bottom) * scaleCalc) - parseInt(floatingLayers[i].style.bottom);                                            translate += "translateY(" + translateY + "px) ";                                          }                                          if (floatingLayers[i].style.left !== "auto") {                                            var translateX = parseInt(floatingLayers[i].style.left) - (parseInt(floatingLayers[i].style.left) * scaleCalc);                                            translate += "translateX(" + translateX + "px) ";                                          }                                          if (floatingLayers[i].style.top !== "auto") {                                            var translateY = parseInt(floatingLayers[i].style.top) - (parseInt(floatingLayers[i].style.top) * scaleCalc);                                            translate += "translateY(" + translateY + "px) ";                                          }                                          floatingLayers[i].style.transform = "scale("+1/scaleCalc+")" + " " + translate;                                      }                                    } catch (e) {                                      console.log(e);                                    }                                } else {                                    parentFrame.style.WebkitTransform = "none";                                    parentFrame.style.MozTransform = "none";                                    parentFrame.style.MsTransform = "none";                                    parentFrame.style.OTransform = "none";                                    parentFrame.style.transform = "none";                                    parentFrame.parentNode.style.maxHeight = "none";                                    var vTrackApp = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_" + screenNum);                                    if (vTrackApp !== null) {                                        vTrackApp.style.transform = "translate(0,0)";                                    }                                    /* floating layers when no resize is needed */                                    var floatingLayers = document.getElementById("screen-"+screenNum).querySelectorAll(".floating-element");                                    var i;                                    for (i = 0; i < floatingLayers.length; i++) {                                      floatingLayers[i].style.transform = "";                                    }                                }                            } catch (e) {                            }                            /* If there is a resposive screen screen override, make sure that it gets called */                            try {                                if (typeof context.advResponsiveOverride === "function"){                                    context.advResponsiveOverride();                                }                            } catch (e) {}                        } else {                            try {                                if (parentFrame.parentNode.parentNode.id.substring(0,16) == "adventive_htmlx_"){                                    parentFrame.parentNode.parentNode.style.maxWidth = "none";                                }                                parentFrame.style.WebkitTransform = "none";                                parentFrame.style.MozTransform = "none";                                parentFrame.style.MsTransform = "none";                                parentFrame.style.OTransform = "none";                                parentFrame.style.transform = "none";                                parentFrame.parentNode.style.maxHeight = "none";                            } catch (e) {}                        }                        var firstCheckTimer = 1;                        setTimeout(function(){                            firstCheckTimer = 0;                            for (var index = 0; index < window["resizeEvents_"+screenNum].length; ++index) {                                window[window["resizeEvents_"+screenNum][index]](parseInt(parentFrame.parentNode.offsetWidth) / parseInt(screenW[screenNum]));                            }                        }, firstCheckTimer);                  } var fireTracker_85124 = function(goToScreenNum){};function goToScreen(goToScreenNum, transition, direction, adType, transitionTime){                    expandDirection = direction;                    if(activeScreen != goToScreenNum){                        screenTransition = true;                        triggerResponsiveGoToScreens();                        if (adType === (void 0)) adType = "";                        if((adType == "Interstitial" ||                            adType == "Mobile Full Page Flex") &&                            (0 || 0)){                            if ("None" !== "None") {                                previousScreen = activeScreen;                            }                        }                var leaveScreen = activeScreen;                activeScreen = goToScreenNum;                setResponsiveScreen(goToScreenNum);                var tTime = parseInt(transitionTime);                if(tTime !== undefined || !isNaN(parseInt(tTime))) {                    var transitionT = parseInt(transitionTime);                } else {                    var transitionT = 300;                }                for (var index = 0; index < window["leaveScreenEvents_"+leaveScreen].length; ++index) {                    window[window["leaveScreenEvents_"+leaveScreen][index]]();                }                var closeScreen = document.getElementById("screen-"+leaveScreen);                if (adType === "Cinema") {                    transition = "Cinema Fade";                }                if ((transition === "Fade") || (transition === "Cinema Fade")) {                    var openScreen = document.getElementById("screen-"+goToScreenNum);                    simpleFade(closeScreen, openScreen, transitionT);                } else {                    simpleChange(closeScreen, transitionT);                    showScreen(goToScreenNum);                }                if (autoEvents[goToScreenNum] !== undefined) {                    checkAutoEvents(autoEvents[goToScreenNum].screenId, autoEvents[goToScreenNum].transition, autoEvents[goToScreenNum].delay, "", autoEvents[goToScreenNum].transitionTime);                }                /* If there is a callback function, pass it the information that it needs */                try {                    if (typeof parent.window.ns_4_85124_xt768330.advExpandCallback === "function"){                        parent.window.ns_4_85124_xt768330.advExpandCallback(screenW[goToScreenNum], screenH[goToScreenNum], transitionTime);                    }                } catch (e) {}                /* Hide/show pushdown skin images as needed */                if(adType == "Pushdown Skin" || adType == "Takeover"){                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_left_holder-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_left_holder-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_right_holder-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_right_holder-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_image_wall_holder-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_image_wall_holder-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_left_click-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_left_click-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_right_click-"+leaveScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_right_click-"+leaveScreen).style.display = "none";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_left_holder-"+activeScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_left_holder-"+activeScreen).style.display = "block";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_right_holder-"+activeScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_right_holder-"+activeScreen).style.display = "block";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_image_wall_holder-"+activeScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_image_wall_holder-"+activeScreen).style.display = "block";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-"+activeScreen)){                        if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-"+activeScreen).getAttribute("source") != window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-0").getAttribute("source")){                            window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-"+activeScreen).style.display = "block";                        }                        else{                            window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_video_wall_holder-0").style.display = "block";                        }                    }                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_left_click-"+activeScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_left_click-"+activeScreen).style.display = "block";                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_right_click-"+activeScreen))window.parent.document.getElementById("adventive_htmlx_xt768330_pushdown_wall_right_click-"+activeScreen).style.display = "block";                    /* Trigger resize to position images */                    try{                        /* Normal browsers */                        window.dispatchEvent(new Event("resize"));                    }                    catch(e){                        /* Old browsers and IE/EDGE */                        var evt = window.document.createEvent("UIEvents");                        evt.initUIEvent("resize", true, false, window, 0);                        window.dispatchEvent(evt);                    }                }                if(adType != "Overtake"){                    var adWrapper = document.getElementById("adventive_htmlx_xt768330_outer");                    adWrapper.style.transition = "width " + transitionT + "ms ease-in-out, height " + transitionT + "ms ease-in-out";                    adWrapper.style.width = screenW[goToScreenNum];                    adWrapper.style.height = screenH[goToScreenNum];                    var parentFrame = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");                    parentFrame.style.transition = "width " + transitionT + "ms ease-in-out, height " + transitionT + "ms ease-in-out";                    parentFrame.style.width = screenW[goToScreenNum];                    parentFrame.style.height = screenH[goToScreenNum];                    if(typeof window.parent.ff_el!=="undefined"){                        try {                            window.parent.ff_el.style.transition = "width " + transitionT + "ms ease-in-out, height " + transitionT + "ms ease-in-out";                            window.parent.ff_el.style.width = screenW[goToScreenNum];                            window.parent.ff_el.style.height = screenH[goToScreenNum];                        } catch (e) { console.log(e); }                    }                }                if (adType === "Adhesion") {                    try{                        var adhesionClose = window.parent.document.getElementById("adventive_htmlx_xt768330_close");                        adhesionClose.style.transition = "all " + transitionT + "ms ease-in-out";                        adhesionClose.style.bottom = (parseInt(adWrapper.style.height) - adhesionClose.clientHeight + 20) + "px";                    } catch (e) { }                    try{                        var adhesionTimer = window.parent.document.getElementById("adventive_htmlx_xt768330_timer");                        if (adhesionTimer !== null){                            adhesionTimer.style.transition = "all " + transitionT + "ms ease-in-out";                            if (parseInt(adhesionTimer.style.top)) {                                adhesionTimer.style.top = parseInt(adWrapper.style.height) + "px";                            } else {                                adhesionTimer.style.bottom = (parseInt(adWrapper.style.height) + 5) + "px";                            }                        }                    } catch (e) { console.log(e); }                }                if (adType === "Wallpaper" || adType == "Wallpaper2") {                    if(wallpaperObjects != undefined){                        var originalLength = wallpaperObjects.length;                        for(var i = 0; i < originalLength; i++) {                            var floatingObject = window.parent.document.getElementById(wallpaperObjects[i]);                            if(floatingObject.className.indexOf("adventive_htmlx_xt768330_wallpaperFloat") !== -1){                                var className = window.parent.document.getElementById("adventive_htmlx_xt768330_frame").parentNode.id + "_floatingObject_active";                                if(wallpaperObjects[i].split("-")[1] == activeScreen){                                    floatingObject.style.display = "block";                                    floatingObject.className += " " + className;                                }                                else{                                    floatingObject.style.display = "none";                                    floatingObject.className = "adventive_htmlx_xt768330_wallpaperFloat";                                }                            }                        }                    }                }                /* Force Marquee Ads to use push */                if (adType === "Marquee") {                    transition = "Push";                }                if (adType === "Overtake") {                    transition = "Overtake Push";                }                if (adType === "Reveal" && context) {                    context.gotoScreenReveal(goToScreenNum, screenResponsive[goToScreenNum]);                }                /* Handle the Safe Frame expansion if in a Safe Frame */                var inSafeFrame = parent.window.ns_4_85124_xt768330.inSafeFrame;                if (inSafeFrame) {                    if (goToScreenNum === 0) {                        parent.window.ns_4_85124_xt768330.collapse();                    } else {                        parent.window.ns_4_85124_xt768330.expand(direction, transition, screenW[leaveScreen], screenH[leaveScreen], screenW[goToScreenNum], screenH[goToScreenNum]);                    }                }                /* Handle Mraid expansion */                var inMraid = parent.window.ns_4_85124_xt768330.inMraid;                if (inMraid) {                    if (goToScreenNum === 0) {                        parent.window.ns_4_85124_xt768330.collapse();                    } else {                        parent.window.ns_4_85124_xt768330.expand(direction, transition, screenW[leaveScreen], screenH[leaveScreen], screenW[goToScreenNum], screenH[goToScreenNum]);                    }                }                /* Use custom pusdown logic for Overtake ads. Located in Overtake.js */                if (transition === "Overtake Push") {                    parent.window.ns_4_85124_xt768330.secondScreenExpand_adventive_htmlx_xt768330(goToScreenNum,screenW[goToScreenNum],screenH[goToScreenNum],transitionT,screenResponsive,responsiveGoToScreens);                }                if (transition === "Cinema Fade") {                    parent.window.ns_4_85124_xt768330.cinemaChangeScreen(goToScreenNum,screenW[goToScreenNum],screenH[goToScreenNum],transitionT,screenResponsive,responsiveGoToScreens);                }                if (transition === "Push") {                    var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                    parentFrameContainer.style.transition = "width " + transitionT + "ms ease-in-out, height " + transitionT + "ms ease-in-out";                    if (adType != "Marquee"){                        parentFrameContainer.style.width = screenW[goToScreenNum];                    }                    parentFrameContainer.style.height = screenH[goToScreenNum];                    parentFrameContainer.setAttribute("data-transition", transition);                    parentFrameContainer.setAttribute("data-speed", transitionT);                }                if ((transition === "Slide") || (transition == "") || (transition == "fade")){                    var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                    if (parentFrameContainer.style.zIndex === "" || parentFrameContainer.style.zIndex != 0) {                        parentFrameContainer.style.zIndex = 5000;                    }                    if (parentFrame.style.zIndex === "" || parentFrame.style.zIndex != 0) {                        parentFrame.style.zIndex = 5000;                    }                    parentFrameContainer.setAttribute("data-transition", transition);                    parentFrameContainer.setAttribute("data-speed", transitionT);                }                /* Check for calback functions to call when a screen is loaded for the first time.*/                if (!screenViewed[activeScreen]) {                    for (var index = 0; index < window["fireEvents_"+activeScreen].length; ++index) {                        window[window["fireEvents_"+activeScreen][index]]();                    }                    fireTracker_85124(goToScreenNum);                } else { /* the screen has been reentered.  call the reenter callbacks */                    for (var index = 0; index < window["reenterScreenEvents_"+goToScreenNum].length; ++index) {                        window[window["reenterScreenEvents_"+goToScreenNum][index]]();                    }                }                screenViewed[activeScreen] = 1;                /* Add any viewability callbacks */                monitorEvents = [];                monitorObjects = [];                if(transition != "Fade"){                    /* Viewability Analytics Code for Screens*/                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker")){                        parentFrameContainer = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker");                    }                    else if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen)){                        parentFrameContainer = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_"+activeScreen);                    }                    addViewability(parentFrameContainer);                }            }            /* Set up scroll actions if there are any after the screen is changed*/            setupScrollActions();            /* Set up swipe actions if there are any after the screen is changed*/            if (swipeActions.length) {                setupSwipeActions();            }        } function openAsInterstitial(goToScreenNum, adType, recipeUuid, pid, cid, pTag, intSettings){                        if (adType === "Interstitial") {                            goToScreen(goToScreenNum, "fade", "", adType);                        } else {                            adType = (typeof adType === "undefined") ? "" : adType;                            var leaveScreen = activeScreen;                            var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                            /* Add the background div to the body */                            try {                                var int_ad_unit = window.parent.document.getElementById("adventive_4_85124_xt768330_int");                                if (int_ad_unit === null) {                                    var tempInt = document.createElement("div");                                        tempInt.id = "adventive_4_85124_xt768330_int";                                        var intScript = document.createElement("SCRIPT");                                        intScript.type = "text/javascript";                                        var uri_query = "";                                        var adClick = document.getElementById("clickWrapper");                                        if (adClick === null){                                            adClick = "";                                        } else {                                            adClick = encodeURIComponent(adClick.href);                                        }                                        /* Handle preview from builder, preview from campaign, or ad serve logic */                                        if (pTag !== "") {                                            intScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=85d9dc78b4e74789ae93eb625cf97ffb&click=https%3A%2F%2Fadclick.g.doubleclick.net%2Fpcs%2Fclick%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&ptag=" + pTag + "&spLoadP=" + pid + "&spLoadC=" + cid + "&spLoadU=" + recipeUuid + "&type=4&fb=" + tempInt.id + "&forceFallback=1&iAmInt=1&initScreen=" + goToScreenNum + "&intSettings=" + intSettings;                                        } else {                                            intScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=85d9dc78b4e74789ae93eb625cf97ffb&click=https%3A%2F%2Fadclick.g.doubleclick.net%2Fpcs%2Fclick%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&spLoadP=" + pid + "&spLoadC=" + cid + "&spLoadU=" + recipeUuid + "&type=4&fb=" + tempInt.id + "&forceFallback=1&iAmInt=1&initScreen=" + goToScreenNum + "&intSettings=" + intSettings;                                        }                                        parentFrameContainer.parentNode.appendChild(tempInt);                                        tempInt.appendChild(intScript);                                  var ad_script = parentFrameContainer;                                }                            } catch (e) { console.log(e); }                            if (!screenViewed[goToScreenNum]) {                                fireTracker_85124(goToScreenNum);                            }                            screenViewed[activeScreen] = 1;                        }                  } function openAsFullPageFlex(goToScreenNum, adType, recipeUuid, pid, cid, pTag, flexSettings){                        if (adType === "Mobile Full Page Flex") {                            goToScreen(goToScreenNum, "fade", "", adType);                        } else {                            adType = (typeof adType === "undefined") ? "" : adType;                            var leaveScreen = activeScreen;                            var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");                            /* Add the background div to the body */                            try {                                var flex_ad_unit = window.parent.document.getElementById("adventive_4_85124_xt768330_flex");                                if (flex_ad_unit === null) {                                    var tempFlex = document.createElement("div");                                        tempFlex.id = "adventive_4_85124_xt768330_flex";                                        var flexScript = document.createElement("SCRIPT");                                        flexScript.type = "text/javascript";                                        var uri_query = "";                                        var adClick = document.getElementById("clickWrapper");                                        if (adClick === null){                                            adClick = "";                                        } else {                                            adClick = encodeURIComponent(adClick.href);                                        }                                        /* Handle preview from builder, preview from campaign, or ad serve logic */                                        if (pTag !== "") {                                            flexScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=85d9dc78b4e74789ae93eb625cf97ffb&click=https%3A%2F%2Fadclick.g.doubleclick.net%2Fpcs%2Fclick%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&ptag=" + pTag + "&spLoadP=" + pid + "&spLoadC=" + cid + "&spLoadU=" + recipeUuid + "&type=4&fb=" + tempFlex.id + "&forceFallback=1&iAmFlex=1&initScreen=" + goToScreenNum + "&flexSettings=" + flexSettings;                                        } else {                                            flexScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=85d9dc78b4e74789ae93eb625cf97ffb&click=https%3A%2F%2Fadclick.g.doubleclick.net%2Fpcs%2Fclick%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&spLoadP=" + pid + "&spLoadC=" + cid + "&spLoadU=" + recipeUuid + "&type=4&fb=" + tempFlex.id + "&forceFallback=1&iAmFlex=1&initScreen=" + goToScreenNum + "&flexSettings=" + flexSettings;                                        }                                        parentFrameContainer.parentNode.appendChild(tempFlex);                                        tempFlex.appendChild(flexScript);                                  var ad_script = parentFrameContainer;                                }                            } catch (e) { console.log(e); }                            if(!screenViewed[goToScreenNum]){                                fireTracker_85124(goToScreenNum);                            }                            screenViewed[activeScreen] = 1;                        }                  } function doResponsiveFunction(scale){                          var firstCheckTimer = 1;                        setTimeout(function(){                            firstCheckTimer = 0;                            var parentFrame = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");                            for (var index = 0; index < window["resizeEvents_"+activeScreen].length; ++index) {                                window[window["resizeEvents_"+activeScreen][index]](scale);                            }                        }, firstCheckTimer);                  }function checkAutoEvents(goToScreenNum, transition, delay, direction, transitionTime, uuid, pid, cid, pTag, specialSettings) {       direction = direction || "";      if(window["autoWait_" + activeScreen]) window["autoEvents_" + activeScreen].push([goToScreenNum, transition, delay, direction, transitionTime, uuid, pid, cid, pTag, specialSettings]);      if (!screenViewed[activeScreen] && !window["autoWait_" + activeScreen]) {          autoTimer = setTimeout(function(){   if(!manualTriggered) {              document.body.className = "";               var additionalData = {screenIndex:parseInt(activeScreen)+1};              var logType = (activeScreen == 0 ? "nav_expand_auto" : "nav_collapse_auto"); parent.window.ns_4_85124_xt768330.logStat(logType, JSON.stringify(additionalData)); if (transition == "interstitial") {                                                      openAsInterstitial(goToScreenNum,"Banner", uuid, pid, cid, pTag, specialSettings);                                                  } else if (transition == "fullpageflex") {                                                      openAsFullPageFlex(goToScreenNum,"Banner", uuid, pid, cid, pTag, specialSettings);                                                  } else {                                                      goToScreen(goToScreenNum, transition, "", "Banner", transitionTime);                                                  }          } },delay);       }       /*if (!screenViewed[activeScreen]) {                            for (var index = 0; index < window["fireEvents_"+activeScreen].length; ++index) {                                window[window["fireEvents_"+activeScreen][index]]();                            }                        }*/      screenViewed[activeScreen] = 1; } screenViewed.push(0); screenW.push("300px"); screenH.push("250px"); whRatio.push("1"); var fireEvents_0 = []; var leaveScreenEvents_0 = []; var viewScreenEvents_0 = []; var leaveViewScreenEvents_0 = []; var resizeEvents_0 = []; var reenterScreenEvents_0 = []; var autoEvents_0 = []; var autoWait_0 = false; var leaveAdEvents = []; screenResponsive.push(0);    function adClick(e){var t=_init(e),n=t.elt.parentNode;logStat(n.clickType,JSON.stringify({dest:n.dest,xVal:t.coords.x,yVal:t.coords.y,screenIndex:1}))}function _init(e){var t=(e=e||window.event).srcElement||e.target,n=null,i=null;if(e.pageX&&e.pageY)n=parseInt(e.pageX-t.offsetLeft),i=parseInt(e.pageY-t.offsetTop);else if(e.clientX&&e.clientY){var l=t.getBoundingClientRect();n=parseInt(e.clientX-l.left),i=parseInt(e.clientY-l.top)}return{elt:t,coords:{x:n,y:i}}}function logHtmlEvent(evt, activeScreen, logType, logTypeData) {            var initObj = _init(evt);        var additionalData = { \'xVal\': initObj.coords.x, \'yVal\': initObj.coords.y, \'screenIndex\': activeScreen + 1 };                for (var attrname in logTypeData) { additionalData[attrname] = logTypeData[attrname]; }        if ((logType == "serve_clickthrough") && (additionalData.label == "")) {additionalData.label = "Screen " + (activeScreen+1);}        parent.window.ns_4_85124_xt768330.logStat(logType, JSON.stringify(additionalData));        if (logType == "serve_clickthrough"){                    if (parent.window.ns_4_85124_xt768330.isClickThrough(logType)) {                parent.window.ns_4_85124_xt768330.html5Clked = 1;            }            } else {        if (parent.window.ns_4_85124_xt768330.isEngagement(logType)) {            parent.window.ns_4_85124_xt768330.html5Enged = 1;        }    }}function logClickAndNavigate(evt, activeScreen, logType, logTypeData, clicktoUrl) {        var clickto = clicktoUrl;            var initObj = _init(evt);        var additionalData = { \'xVal\': initObj.coords.x, \'yVal\': initObj.coords.y, \'screenIndex\': activeScreen + 1 };        for (var attrname in logTypeData) { additionalData[attrname] = logTypeData[attrname]; }        if ((logType == "serve_clickthrough") && (additionalData.label == "")) {            additionalData.label = "Screen " + (activeScreen+1);        }        parent.window.ns_4_85124_xt768330.logStatAndNavigate(            logType, JSON.stringify(additionalData), clickto        );    }function logThirdPartyTracking(type,url,hash){    parent.window.ns_4_85124_xt768330.fireTracker(type,url,hash);}function logHp(evt, activeScreen, logType, logTypeData) {    var initObj = _init(evt);    var additionalData = {        xVal: initObj.coords.x,        yVal: initObj.coords.y,        screenIndex: activeScreen + 1    };        for (var attrname in logTypeData) {        additionalData[attrname] = logTypeData[attrname];    }    additionalData.label = "HP " + (activeScreen+1);    parent.window.ns_4_85124_xt768330.logStat(        "serve_clickthrough_hp",        JSON.stringify(additionalData)    );}function clickEventHp() {    var hpEvent = document.createEvent("CustomEvent");    var hpDat = {"label":"clickEventHp"};    logHp(hpEvent, 1, "serve_clickthrough_hp", hpDat);}</scr' + 'ipt></head><body style="margin:0; padding:0;" class="hide"><script>try {      var checkPar = parent.document.domain} catch (e) {      document.write("<script>try{document.domain=\'%%%%SETDOM%%%%\';} catch (e) {}</scr"+"ipt>"); document.close(); }</scr' + 'ipt><div style=\'background-color:transparent; position:absolute;\'>            <a href=\'https://assets.adventivecdn.com/ui/images/hp_blank.png\'                id=\'clickWrapperHP\' target=\'_blank\'                onclick=\'logHp(event, activeScreen, "serve_clickthrough_hp", hpDatClickEvt)\'>                <div style=\'background-color: transparent; width: 1px; height: 1px; position: relative;\'>                </div>            </a>        </div><a href="https://adclick.g.doubleclick.net/pcs/click?xai=AKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w&sai=AMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM&sig=Cg0ArKJSzD4pwKULcQkREAE&urlfix=1&adurl=https%3A%2F%2Fwww.nhl.com%2Fbluejackets%2Ftickets%2Ffamily%3FpartnerId%3Dcbj-web-ext-DMG-ban-FVP%26utm_source%3DThriveHive%26utm_medium%3DDISP%26utm_campaign%3DFVP_300x250" target="_blank" id="clickWrapper" onclick="logHtmlEvent(event, activeScreen, \'serve_clickthrough\', {dest:\'https://www.nhl.com/bluejackets/tickets/family?partnerId=cbj-web-ext-DMG-ban-FVP&utm_source=ThriveHive&utm_medium=DISP&utm_campaign=FVP_300x250\', label:\'\'})" ><div id="adventive_htmlx_xt768330_outer" class="adContainer" style="position:relative; height:250px; width:300px; overflow:hidden;"><div id="adventive_htmlx_xt768330_inner" onfocus="this.blur();" data-spec-uuid="" data-spec-pid="88669" data-spec-cid="37053"><div id="screen-0" style="width:300px; height:250px; z-index:1000;  position:absolute;" class="ad-screen"><div onclick="event.stopImmediatePropagation(); event.preventDefault(); event.stopPropagation();" style="cursor: default; width:100%; height:0px; background-color:rgba(0, 0, 0, 0); position:absolute; top:0px; left:0px; z-index:1099"></div><div onclick="event.stopImmediatePropagation(); event.preventDefault(); event.stopPropagation();" style="cursor: default; width:0px; height:100%; background-color:rgba(0, 0, 0, 0); position:absolute; top:0px; right:0px; z-index:1099"></div><div onclick="event.stopImmediatePropagation(); event.preventDefault(); event.stopPropagation();" style="cursor: default; width:100%; height:0px; background-color:rgba(0, 0, 0, 0); position:absolute; bottom:0px; left:0px; z-index:1099"></div><div onclick="event.stopImmediatePropagation(); event.preventDefault(); event.stopPropagation();" style="cursor: default; width:0px; height:100%; background-color:rgba(0, 0, 0, 0); position:absolute; top:0px; left:0px; z-index:1099"></div><div id="screen-0-bg" style="opacity:1; width:100%;height:100%;background-color:rgb(255, 255, 255);  position:absolute;"></div><div id="layer-0-0" style="width:300px; height:250px; position:absolute; top:0px; left:0px; z-index:1002; filter: alpha(opacity=0); -moz-opacity: 0; -khtml-opacity: 0; opacity: 0; background-color:#fff; " class=""></div>    <div id="layer-0-1" style="filter: alpha(opacity=100); -moz-opacity: 1.00; -khtml-opacity: 1.00; opacity: 1.00; border:0px solid ; width:300px; height:250px; position:absolute; top:0px; left:0px; z-index:1001; overflow:hidden;cursor:default;" class="" onclick="event.stopImmediatePropagation(); event.preventDefault(); event.stopPropagation();">    <iframe id="html5import_iframe_0_1" title="import" type="text/html" width="100%" height="100%" allowfullscreen frameborder="0" scrolling="no"></iframe>  </div></div></div></div></a><script type=\'text/javascript\'>var recipeHasShakeAction = Boolean(0);</scr' + 'ipt><script type=\'text/javascript\'>var recipeHasShakeAction = Boolean(0);</scr' + 'ipt><script type=\'text/javascript\'>var recipeHasVideo = Boolean(0);</scr' + 'ipt><script type=\'text/javascript\'>(function (w, ns, has) {  if (has.call(w.parent, \'window\') && has.call(w.parent.window, ns)) {    w[ns] = w.parent.window[ns];  }})(window, \'Adventive\', Object.prototype.hasOwnProperty);</scr' + 'ipt><script type="text/javascript">setResponsiveScreen(activeScreen);    var ad_obj_0_0 = document.getElementById("layer-0-0");        ad_obj_0_0.style.cursor = "pointer";        var prevEvent_0_0_0 = ad_obj_0_0.onclick;    ad_obj_0_0.onclick = function(event) {                preventEventProp(event);                if (typeof prevEvent_0_0_0 === "function") {            prevEvent_0_0_0(event);        }                var clickTo = "https://adclick.g.doubleclick.net/pcs/click?xai=AKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w&sai=AMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM&sig=Cg0ArKJSzD4pwKULcQkREAE&urlfix=1&adurl=https%3A%2F%2Fwww.nhl.com%2Fbluejackets%2Ftickets%2Ffamily%3FpartnerId%3Dcbj-web-ext-DMG-ban-FVP%26utm_source%3DThriveHive%26utm_medium%3DDISP%26utm_campaign%3DFVP_300x250";        var ts_macro = Date.now() / 1000 | 0;                clickTo = clickTo.replace("[timestamp]", ts_macro);        clickTo = clickTo.replace("[Random]", ts_macro);        clickTo = clickTo.replace("[INSERT_CACHEBUSTER_HERE]", ts_macro);        clickTo = clickTo.replace("[CACHEBUSTER]", ts_macro);        clickTo = clickTo.replace("[%random%]", ts_macro);                var logLabel = "";        logLabel = decodeURIComponent(logLabel);                var actionData = {            dest: "https://www.nhl.com/bluejackets/tickets/family?partnerId=cbj-web-ext-DMG-ban-FVP&utm_source=ThriveHive&utm_medium=DISP&utm_campaign=FVP_300x250",            label: logLabel        };        if("New Tab" != "Same Tab") {                        var win = window.open(clickTo, "_blank");                                            logHtmlEvent(event, activeScreen,                    "serve_clickthrough", actionData);                        try {              win.focus();            } catch(e) {}        } else {                        logClickAndNavigate(event, activeScreen,                "serve_clickthrough", actionData, clickTo);        }    };        var iframesrc_0_1 = "168/03c52d28-9016-4873-a9ee-dd9f5524d63b/Family-Value-Pack_300x250/index.html";    var ssAppInit_0_1 = function() {        var importFrame = document.getElementById("html5import_iframe_0_1");        if(iframesrc_0_1!=\'\')importFrame.src = \'https://html5.adventivecdn.com\' + \'/\' + iframesrc_0_1;    };            try {        fireEvents_0.push("ssAppInit_0_1");    } catch(e) {        var fireEvents_0 = [];        fireEvents_0.push("ssAppInit_0_1");    }    var html5import_content_0_1=\'<div id="html5import_0_1"></div>\';    var clickthroughPrepend = true;try {    var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";    var eventer = window[eventMethod];    var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";    eventer(messageEvent,function(e) {        if (e.origin === "https://html5.adventivecdn.com") {            var key = e.message ? "message" : "data";            var data = e[key];            if (typeof data === "string") {                switch(data) {                    case "closeInterstitial":                        closeInterstitial();                        break;                    case "closeFullPageFlex":                        closeFullPageFlex();                        break;                    case "closeStickySidebar":                        closeStickySidebar();                        break;                    case "getClickTrackerUrl":                        getClickTrackerUrl(e);                        break;                    default:                        console.log("unsupported method");                        break;                }            }            if (typeof data === "object") {                switch(data.method) {                    /* Handle the click tracking on imported HTML */                    case "log_clickthrough":                        var clickthroughData = {                            dest: data.href,                            label: "Imported HTML Clickthrough"                        };                        logHtmlEvent(e, activeScreen,"serve_clickthrough", clickthroughData);                        break;                    default:                      console.log("unsupported method");                      break;                }            }        }    },false);} catch (e) { console.log("messaging API not supported"); }var closeInterstitial = function() {    try{        /* Get the outer div and do some set up on it. */        var frame_adventive_htmlx_xt768330 = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");        var frame_adventive_htmlx_xt768330_parent = frame_adventive_htmlx_xt768330.parentNode;        var el = window.parent.document.getElementById(frame_adventive_htmlx_xt768330_parent.id + "_back");        var evt = document.createEvent("MouseEvents");        evt.initEvent("click", true, true);        el.dispatchEvent(evt);    } catch (e) { console.log(e); }};var closeStickySidebar = function() {    try{        /* Get the outer div and do some set up on it. */        var frame_adventive_htmlx_xt768330 = window.parent.document.getElementById("adventive_htmlx_xt768330_frame");        var frame_adventive_htmlx_xt768330_parent = frame_adventive_htmlx_xt768330.parentNode;        parent.window.ns_4_85124_xt768330.closeStickySidebar_adventive_htmlx_xt768330(0, frame_adventive_htmlx_xt768330_parent);    } catch (e) { console.log(e); }};var closeFullPageFlex = function () { console.log("called close flex"); };var getClickTrackerUrl = function(event) {    var clickthroughPrependAddress = "";    if (clickthroughPrepend) {        clickthroughPrependAddress = "https://adclick.g.doubleclick.net/pcs/click?xai=AKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w&sai=AMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM&sig=Cg0ArKJSzD4pwKULcQkREAE&urlfix=1&adurl=";    }    var data = {        method: "setClickTracker",        ext_track: "https://adclick.g.doubleclick.net/pcs/click?xai=AKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w&sai=AMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM&sig=Cg0ArKJSzD4pwKULcQkREAE&urlfix=1&adurl="    };    var frames = document.getElementsByTagName("iframe");    for (var i = 0; i < frames.length; i++) {        if (frames[i].contentWindow === event.source) {            frames[i].contentWindow.postMessage(data,"https://html5.adventivecdn.com");        }    }};            for (var index = 0; index < window["fireEvents_"+activeScreen].length; ++index) {              window[window["fireEvents_"+activeScreen][index]]();            }            if (!initHidden){                document.body.className = "";            }            try{                clickUrl = document.getElementById("clickWrapper").href;            }            catch(e){            }            screenViewed[activeScreen]=1; triggerResponsiveGoToScreens();            var contextId = "ns_4_85124_xt768330";            var context = parent.window[contextId];            if ("Banner" === "Reveal" && context) {                context.gotoScreenReveal(0, screenResponsive[0]);            }            try {              if (context.inMraid) {                /* Set up the clickthroughs to use MRAID API */                var clickWrapperElement = document.getElementById("clickWrapper");                if (clickWrapperElement !== null) {                  var prevClickWrapperClick = clickWrapperElement.onclick;                  clickWrapperElement.onclick = function(event){ event.preventDefault(); parent.window.mraid.open(this.href); prevClickWrapperClick(event); };                }                window.open = function(url, target) {                    parent.window.mraid.open(url);                };              }            } catch(e) { console.log(e); }monitorEvents = [];            monitorObjects = [];            /* Viewability Analytics Code for When Ad First Loads*/            var parentFrameContainerEvents;            /* Viewability Analytics for metrics */            /*************************************/            /*            * After the defined minimumViewTime passes and the ad is being seen at least 50%, the ad is logged as viewed.            *    If the ad goes out of view before the time passes, no thing is logged.            *    If the ad comes into view later, the timer restarts.            */            var viewed = false;            var inView = false;            var minimumViewTime = recipeHasVideo ? 2 : 1; /* How long an ad must be seen initially before its reported as a viewable impression, in secs */            var viewedTimeout_adventive_htmlx_xt768330;     /* Timeout object */            var viewTimeoutRunning = false;     /* Flag to prevent multiple viewedTimeout_s*/            var parentFrameContainer = window.parent.document.getElementById("adventive_4_85124_xt768330");            window["viewScreenEvents_"+activeScreen].unshift(["inViewAnalitycs_adventive_htmlx_xt768330", parentFrameContainer]);            window["leaveViewScreenEvents_"+activeScreen].unshift(["outOfViewAnalitycs_adventive_htmlx_xt768330", parentFrameContainer]);            function inViewAnalitycs_adventive_htmlx_xt768330(){                /* Ad in view */                inView = true;                if(!viewed && !viewTimeoutRunning){                    viewTimeoutRunning = true;                    viewedTimeout_adventive_htmlx_xt768330 = setTimeout(function(){                        /* Ad officially viewed */                        viewed = true;                        var viewEvent = document.createEvent("CustomEvent");                        if(1){                            viewLog_adventive_htmlx_xt768330("ad_view_view_auto", minimumViewTime, viewEvent);                        }                    },minimumViewTime*1000);                }            }            function outOfViewAnalitycs_adventive_htmlx_xt768330(){                /* Ad out of view */                clearTimeout(viewedTimeout_adventive_htmlx_xt768330);                viewTimeoutRunning = false;                inView = false;            }            function viewLog_adventive_htmlx_xt768330(stat_log, viewTime, event) {                var viewDat_adventive_htmlx_xt768330;                if(viewTime > 0){                    viewDat_adventive_htmlx_xt768330 = {"viewTime": viewTime};                }                parent.window.ns_4_85124_xt768330.logStat(stat_log, JSON.stringify(viewDat_adventive_htmlx_xt768330));                try {                    if(typeof parent.window.adv_console === "function"){                        parent.window.adv_console("This ad is now considered viewed");                    }                } catch (e) { /* cross domain error */ }            }            /********************************************************/            /* Make sure library is loaded */            var viewTimer = setInterval(function(){            for (var j = 0; j < window["viewScreenEvents_"+activeScreen].length; ++j) {                monitorObjects[j] = window["viewScreenEvents_"+activeScreen][j][1][0];                if(window["viewScreenEvents_"+activeScreen][j][1].id == undefined){                    if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_0")){                        parentFrameContainerEvents = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_0");                    }                }                else{                    parentFrameContainerEvents = window.parent.document.getElementById("adventive_4_85124_xt768330");                }                if(window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker")){                    parentFrameContainerEvents = window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker");                }                if(typeof window.parent.VisSense == "function"){                        clearInterval(viewTimer);                        var viewabilityEvent = window.parent.VisSense(parentFrameContainerEvents, { fullyvisible: 0.50 });                        /*update every 250 ms */                        monitorEvents[j] = viewabilityEvent.monitor({                            strategy: new window.parent.VisSense.VisMon.Strategy.PollingStrategy({                                interval: 250                            }),                            update: function(){},                            fullyvisible: function(monitor) {                                /*Fire Events in viewability array*/                                for(var k = 0; k < monitorObjects.length; ++k){                                    if(monitor._visobj._element == window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_0")){                                        if(window["viewScreenEvents_"+activeScreen][k][1].id == undefined){                                            window[window["viewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    else if(monitor._visobj._element == window.parent.document.getElementById("adventive_4_85124_xt768330")){                                        if(window["viewScreenEvents_"+activeScreen][k][1].id != undefined){                                            window[window["viewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    else{                                        window[window["viewScreenEvents_"+activeScreen][k][0]]();                                    }                                }                            },                            visibilitychange: function(){},                            hidden: function(monitor) {                                /*Fire Events in hidden array*/                                for(var k = 0; k < monitorObjects.length; ++k){                                    try{                                        if(monitor._visobj._element == window.parent.document.getElementById("adventive_htmlx_xt768330_viewability_tracker_app_0")){                                            if(window["leaveViewScreenEvents_"+activeScreen][k][1].id == undefined){                                                window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                            }                                        }                                        else if(monitor._visobj._element == window.parent.document.getElementById("adventive_4_85124_xt768330")){                                            if(window["viewScreenEvents_"+activeScreen][k][1].id != undefined){                                                window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                            }                                        }                                        else{                                            window[window["leaveViewScreenEvents_"+activeScreen][k][0]]();                                        }                                    }                                    catch(e){                                    }                                }                            }                        }).start();                    }                }            }, 10);</scr' + 'ipt><script type="text/javascript">    function setupScrollActions(){        if(!hasScrollActions) return;        setTimeout(function(){            var thisAdFrame = window.frameElement;            var oldScroll = window.parent.window.scrollY;            window.parent.window.addEventListener(\'scroll\', function(e){                var newScroll = window.parent.window.scrollY;                var direction = \'Greater than\';                if(newScroll > oldScroll){                    direction = \'Greater than\';                }                else if(newScroll <= oldScroll){                    direction = \'Less than\';                }                for (var index = 0; index < scrollActions.length; ++index) {                    if(scrollActions[index].activeScreen == activeScreen){                        if(scrollActions[index].direction == direction){                            if(direction == \'Greater than\' && parseInt(scrollActions[index].distance) <= newScroll){                                scrollActions[index].action();                            }                            else if(direction == \'Less than\' && parseInt(scrollActions[index].distance) > newScroll){                                scrollActions[index].action();                            }                        }                    }                }                oldScroll = newScroll;            }, false);        }, 50);    }    setupScrollActions();    </scr' + 'ipt><script type="text/javascript"></scr' + 'ipt></body></html>');
+    if (context.ieOld) handleOldIe(adFrame);
+
+    var preventAutoExpand = 0;
+if (!doNotServe) {
+    
+    var engageInterstitial_adventive_htmlx_xt768330 = [];
+    var engageFullPageFlex_adventive_htmlx_xt768330 = [];
+    var engageStickySidebar_adventive_htmlx_xt768330 = [];
+        function setUpTrackingVars_adventive_htmlx_xt768330() {
+            }
+
+        function logAdFormatTPTrackingadventive_htmlx_xt768330(adType, action) {
+                    var trackerArray;
+            if (adType === "interstitial") {
+                trackerArray = engageInterstitial_adventive_htmlx_xt768330;
+            } else if (adType === "full_page_flex") {
+                trackerArray = engageFullPageFlex_adventive_htmlx_xt768330;
+            } else if (adType === "sticky_sidebar") {
+                trackerArray = engageStickySidebar_adventive_htmlx_xt768330;
+            }
+            for (var i = 0, taLen = trackerArray.length; i < taLen; i++) {
+                if (trackerArray[i].action == action) {
+                    adFrame.contentWindow.logThirdPartyTracking(
+                        trackerArray[i].type,
+                        trackerArray[i].url,
+                        trackerArray[i].hash
+                    );
+                }
+            }
+            }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+}  };
+
+var activeLogType = '';
+                    
+var iFramed = false;
+
+try {
+    var iFramed = (window.self !== window.top);
+    if (iFramed) {       iFramed  = (window.location !== window.top.location);
+    }
+} catch (e) {
+    var iFramed = true;
+}
+
+try {
+  if (typeof window.inDapIF != 'undefined' && window.inDapIF) {
+    var inFriendlyFrame = true;
+    var ffFound = window.frameElement;     try {
+      if (ffFound) {
+                if (!doNotServe) {
+          var placement_div = document.createElement('div');
+          placement_div.id = 'adventive_htmlx_xt768330_frame';
+          ffFound.parentNode.appendChild(placement_div);
+          var uri_query = 'j&pid=a1e686c6-fe0f-40e8-adf3-2f4d51ecead8&type=4&cb=159028996&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&fb_url=&ref=dispatch.com&oop=&fb=adventive_htmlx_YP691734_frame&forceFallback=1';
+          var script = document.createElement('script');
+          script.type = 'text/javascript';
+                    script.src = 'https://ads.adventive.com/ad?' + uri_query + '&fb=' + placement_div.id + '&forceFallback=1';
+          placement_div.appendChild(script);
+          doNotServe = true; 
+                      placement_div.setAttribute('data-fifid', ffFound.id);
+            ffFound.style.maxHeight = '100%';
+                        ffFound.style.pointerEvents = 'none';
+            ffFound.style.left = 0;
+                  }
+      } else {
+        var inFriendlyFrame = false;
+      }
+    } catch(e) {
+      var inFriendlyFrame = false;
+    }
+  }
+} catch(e) { console.log(e); }
+    var w = window, sf = w["$sf"],ext = sf && sf.ext;
+    var sfExpOvr = true, sfExpPush = false;
+    var gottaFinish = {};
+    var moving = false;
+
+    var lastWin = {};
+    var timer;
+
+    /* Status Update function */
+    function status_update(status, data) {
+        if (status == "geom-update") {
+            updateInView();
+            if ((typeof gottaFinish.t !== 'undefined') || (typeof gottaFinish.r !== 'undefined') || (typeof gottaFinish.b !== 'undefined') || (typeof gottaFinish.l !== 'undefined')) {
+                moving = true;
+                clearTimeout(timer);
+                timer = setTimeout( refreshExpand , 750 );
+            }
+            selfLocationInfo();
+        }
+    }
+
+    var refreshExpand = function () {
+        /* refresh the expansion */
+        if (ext.geom().win != lastWin) {
+            lastWin = ext.geom().win;
+            context.expand (gottaFinish.direction, gottaFinish.transition, gottaFinish.oldW, gottaFinish.oldH, gottaFinish.newW, gottaFinish.newH);
+        }
+    };
+
+    function selfLocationInfo(){
+        var geo = ext.geom(); /* z-index and location, width, and height of the SafeFrame container relative to the browser window (win) */
+    }
+
+    function feature_check(which){
+        var o = ext.supports();
+        return (o && o[which]);
+    }
+
+     /**
+      * Update the inView calculation and display.
+      * Tie this in to the standard ad view ability
+      */
+    function updateInView(){
+        var totalViewable = ext.inViewPercentage();
+    }
+
+    function getExpandRoom() {
+        /* expected distance available for expansion within the browser window */
+        return ext.geom().exp;
+    }
+
+    context.collapse = function() {
+        setTimeout(function(){ ext.collapse();}, 300);
+    };
+
+    context.expand = function(direction, transition, oldW, oldH, newW, newH) {
+
+        oldW = "300px";
+        oldH = "250px";
+        oldW=parseInt(oldW); oldH=parseInt(oldH); newW=parseInt(newW); newH=parseInt(newH);
+        var d=direction, t=0, l=0, r=0, b=0;
+        if (d=='') { d='Down'; }
+
+        var deltaW = Math.abs(oldW - newW);
+        var deltaH = Math.abs(oldH - newH);
+
+        /* Set the expansion direction */
+        if ((d=="Down") || (d=="Right")) {
+           r=deltaW; b=deltaH; l=0; t=0;
+        }
+        if (d=="Left") {
+           l=deltaW; b=deltaH; r=0; t=0;
+        }
+        if (d=="Up") {
+           r=deltaW; t=deltaH; r=0; b=0;
+        }
+
+        var push = false;
+        if ( (transition === 'Push') && (sfExpPush)){
+            push = true;
+        }
+        var config = {
+          push: push,
+          t: t,
+          l: l,
+          r: r,
+          b: b
+        };
+
+        if (ext.status() === 'expanded') {
+            ext.collapse();
+            var checkCollapse = setInterval(function(){
+                if (ext.status() === 'collapsed') {
+                    var expandRoom = getExpandRoom();
+                    var notEnoughRoom = false;
+
+                    if (config.t > expandRoom.t) {
+                        config.t = expandRoom.t;
+                        notEnoughRoom = true;
+                    }
+                    if (config.l > expandRoom.l) {
+                        config.l = expandRoom.l;
+                        notEnoughRoom = true;
+                    }
+                    if (config.r > expandRoom.r) {
+                        config.r = expandRoom.r;
+                        notEnoughRoom = true;
+                    }
+                    if (config.b > expandRoom.b) {
+                        config.b = expandRoom.b;
+                        notEnoughRoom = true;
+                    }
+
+                    clearInterval(checkCollapse);
+                    if (notEnoughRoom) {
+                        gottaFinish = {
+                            push: push,
+                            t: t,
+                            l: l,
+                            r: r,
+                            b: b,
+                            direction: direction,
+                            transition: transition,
+                            oldW: oldW,
+                            oldH: oldH,
+                            newW: newW,
+                            newH: newH
+                        };
+                    } else {
+                        gottaFinish = {};
+                    }
+                    ext.expand(config);
+                }
+            }, 10);
+        } else {
+           var expandRoom = getExpandRoom();
+           var notEnoughRoom = false;
+
+           if (config.t > expandRoom.t) {
+               config.t = expandRoom.t;
+               notEnoughRoom = true;
+           }
+           if (config.l > expandRoom.l) {
+               config.l = expandRoom.l;
+               notEnoughRoom = true;
+           }
+           if (config.r > expandRoom.r) {
+               config.r = expandRoom.r;
+               notEnoughRoom = true;
+           }
+           if (config.b > expandRoom.b) {
+               config.b = expandRoom.b;
+               notEnoughRoom = true;
+           }
+
+           if (notEnoughRoom) {
+               gottaFinish = {
+                    push: push,
+                    t: t,
+                    l: l,
+                    r: r,
+                    b: b,
+                    direction: direction,
+                    transition: transition,
+                    oldW: oldW,
+                    oldH: oldH,
+                    newW: newW,
+                    newH: newH
+                };
+           } else {
+              gottaFinish = {};
+           }
+           try {
+               ext.expand(config);
+           } catch(e) { console.log(e); }
+        }
+    };
+
+    if (ext) {
+        try {
+            ext.register(300, 250, status_update);
+            var inSafeFrame = true;
+            context.inSafeFrame = inSafeFrame;
+
+            if ((typeof feature_check("exp-ovr") != 'undefined') && (!feature_check("exp-ovr"))) {
+                sfExpOvr = false;
+            }
+            if ((typeof feature_check("exp-push") != 'undefined') && (feature_check("exp-push")) ) {
+                sfExpPush = true;
+            }
+
+            iFramed = false;
+
+            win = ext.geom().win;
+
+            /* Check the viewability */
+            (function(){
+                window.setTimeout(function(){
+                    updateInView();
+                }, 100);
+            })();
+        } catch (e) { console.log(e); }
+    }
+if (typeof mraid !== 'undefined') {
+    var inMraid = true;
+    context.inMraid = inMraid;
+    iFramed = false;
+
+    function $(element) {
+      element = document.getElementById(element);
+      return element;
+    }
+    var head = document.getElementsByTagName("head")[0];
+    var scr = document.createElement("script");
+    scr.setAttribute('src', 'mraid.js');
+    scr.setAttribute('type', 'text/javascript');
+    head.appendChild(scr);
+    window._aron_init = 0;
+    window._aron_state='none';
+    // Viewport setup
+    var meta = document.querySelector("meta[name=viewport]");
+    if (!meta){
+      meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1";
+      head.appendChild(meta);
+    }
+    else {
+      meta.content = "width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1";
+    }
+
+    function logmessage(message)
+    { //Dual logging. It will show in the console and in the ad.
+        var logdiv = $('logdiv');
+        if(logdiv)
+        {
+            logdiv.insertBefore(document.createElement("br"),logdiv.firstChild);
+            logdiv.insertBefore(document.createTextNode(new Date().getTime()+": "+message),logdiv.firstChild);
+
+        }
+    }
+
+    function initad() {
+        var gcp = mraid.getCurrentPosition();
+
+        window._aron_init = 1;
+    }
+
+    function readycheck()
+    {
+        logmessage('window.onload() triggered.');
+        if(mraid.getState() == 'loading') {
+            mraid.addEventListener("ready", statechange);
+        }
+        else {
+            statechange();
+        }
+        if(!mraid.isViewable()) {
+          logmessage('Adview is not visible'); //Don't die from this error, just a notice
+        }
+        mraid.addEventListener('error', mraiderror);
+        mraid.addEventListener('stateChange', statechange);
+        mraid.addEventListener('sizeChange', sizechange);
+        mraid.removeEventListener('stateChange', statechange);
+        mraid.addEventListener('stateChange', statechange); //Just to check that removing and adding the same event listener works.
+    }
+
+    function updateprops(event)
+    {
+        var gcp = mraid.getCurrentPosition();
+        var gss = mraid.getScreenSize();
+        var expp = mraid.getExpandProperties();
+        var orient = 'Undefined!';
+        switch (window.orientation)
+        {
+        case 0:
+        case 180:
+            orient = 'Portrait';
+            break;
+        case 90:
+        case -90:
+            orient = 'Landscape';
+            break;
+        }
+        logmessage("[Cur: x: " + gcp.x + ", y: " + gcp.y + ", width: " + gcp.width + ", height: " + gcp.height+"] ["+
+          "Window: x: " + window.innerWidth + ", y: " + window.innerHeight+"] ["+
+          "Scr: width: " + gss.width + ", height: " + gss.height+"] ["+
+          "expProps: width: " + expp.width + ", height: " + expp.height +"] ["+
+          "Current orientation: " + orient+"] ["+
+          "Last Event: " + event+"]"
+        );
+    }
+
+    function statechange() {
+        if (window._aron_init == 0)
+        {
+            initad();
+        }
+        updateprops("State Change");
+        if(mraid.getState()!=window._aron_state)
+        {
+          window._aron_state=mraid.getState();
+          stepchange();
+        }
+    }
+
+    function stepchange()
+    {
+        var gcp = mraid.getCurrentPosition();
+        // var posdiv = $('posdiv');
+
+        window._aron_step = 0;
+    }
+
+
+    function sizechange(width, height)
+    {
+        updateprops("Size Change");
+        if(mraid.getState()!=window._aron_state)
+        {
+          window._aron_state=mraid.getState();
+          stepchange();
+        }
+        var gcp = mraid.getCurrentPosition();
+
+
+        if(mraid.getState()=='default')
+        {
+            // alert('default');
+        }
+    }
+
+    function mraiderror(message, action) {
+      console.log("MRAID Error: '" + message + "' From: " + action);
+    }
+
+
+
+    if (document.readyState == "complete") {
+      readycheck();
+    } else {
+      window.addEventListener('load', readycheck, false); //DOM and MRAID check
+    }
+
+    context.expand = function(direction, transition, oldW, oldH, newW, newH) {
+        newW = Math.max(parseInt(newW), mraid.getCurrentPosition().width);
+        mraid.setResizeProperties({"width":parseInt(newW),"height":parseInt(newH),"offsetX":parseInt(parseInt(oldW) - parseInt(newW)),"offsetY":parseInt(parseInt(oldH) - parseInt(newH)),"allowOffscreen":false});
+        mraid.resize();
+    };
+
+    context.collapse = function(direction, transition, oldW, oldH, newW, newH) {
+
+        mraid.close();
+    };
+}
+
+    iFramed = false;
+
+    iFramed = false;
+
+
+if(typeof inFriendlyFrame!=="undefined"){
+    if (inFriendlyFrame) {
+        iFramed = false;
+    }
+}
+
+if( !iFramed ) { 
+            context.adventive_serve_ad_fb();
+            try{var hoverBounds=document.getElementById("adventive_htmlx_xt768330_frame");Date.now||(Date.now=function(){return(new Date).getTime()});var clock,hoverIntent=0,timeCounter=0,timeStart=Date.now(),timeEnd=timeStart,hoverTime=0,_isLive=Boolean("1");hoverBounds.onmouseover=function(){overUnit()},hoverBounds.onmouseout=function(){offUnit()}}catch(t){}function hoverIntended(){var t="ontouchstart"in window||navigator.msMaxTouchPoints;0===hoverIntent&&!t&&_isLive&&logStat("intent_hover"),hoverIntent=1,context.html5Enged=1,clearInterval(clock)}function overUnit(){timeStart=Date.now(),0==timeCounter&&(hoverTime=timeStart),0===hoverIntent&&(clock=setInterval(function(){hoverIntended()},1e3-timeCounter))}function offUnit(){clearInterval(clock),timeEnd=Date.now(),(timeCounter+=timeEnd-timeStart)>=1e3&&0===hoverIntent&&hoverIntended()}
+
+    } else {     function isUrl(s) {
+        var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+        return regexp.test(s);
+    }
+
+    // window.onload = function() {
+
+        
+        
+        var checkNum = Math.floor(Math.random()*100001);
+        var fbLoaded = 0;
+
+                var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        var eventer = window[eventMethod];
+        var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent,function(e) {
+          if (e.data === checkNum) {               fbLoaded = 1;
+          } else { return false;}
+        },false);
+
+                if (fb_location !== '') {
+            var buster_frame = document.createElement('iframe');
+            buster_frame.src = fb_location + "?j=&pid=a1e686c6-fe0f-40e8-adf3-2f4d51ecead8&type=4&cb=159028996&click=adclick.g.doubleclick.net%252Fpcs%252Fclick%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&ref=dispatch.com&oop=&fb=adventive_htmlx_YP691734_frame&forceFallback=1&iid=85d9dc78b4e74789ae93eb625cf97ffb&clickProto=https";
+            buster_frame.style.border = "0px none";
+            buster_frame.style.display = 'none';
+            buster_frame.onload = function() {
+                buster_frame.contentWindow.postMessage(checkNum,"*");
+                setTimeout(function(){
+                    if (!fbLoaded) {
+                        buster_frame.style.display = 'none';
+
+                                                var placement_div = document.createElement( "DIV" );
+                        placement_div.id ='adventive_htmlx_xt768330_frame';
+                        placement_div.style.width = '300px';
+                        placement_div.style.height = '250px';
+                        document.body.appendChild(placement_div);
+                                                    var uri_query = 'j&pid=a1e686c6-fe0f-40e8-adf3-2f4d51ecead8&type=4&cb=159028996&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&fb_url=&ref=dispatch.com&oop=&fb=adventive_htmlx_YP691734_frame&forceFallback=1';
+                            var script = document.createElement('SCRIPT');
+                            script.type = "text/javascript";
+                            script.src = "//ads.adventive.com/ad?" + uri_query + "&fb=" + placement_div.id + "&forceFallback=1";
+                            placement_div.appendChild(script);
+                                            }
+                }, 1000);                 return false;
+            }
+            if (!doNotServe) {
+                 document.body.appendChild(buster_frame);
+            }
+
+        } else {                         var placement_div = document.createElement( "DIV" );
+            placement_div.id ='adventive_htmlx_xt768330_frame';
+            placement_div.style.width = '300px';
+            placement_div.style.height = '250px';
+            document.body.appendChild(placement_div);
+                            var uri_query = 'j&pid=a1e686c6-fe0f-40e8-adf3-2f4d51ecead8&type=4&cb=159028996&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjssoOHBeJX-GCqfQ2befqertdJKmPqVk1ZjnDurDJVLe4rc4UJ_n3lOTrfAl4h7lO_Bq5C_9iTQk_hwun8e-Ty_1v_ebjbitFlmrCQmf3k3tpNM6O3CxBB_U2L7MNspt5F8o8DDplYKnPdJUoxhvv-5Ud41rXbP7G0OS-fMEAYtyZgZey6QPhvXSfoDenm-RkY4Ih8o0gdPWH9P4Jjzx5smaT_SkQwS1Jdfg9ejq8ocG-FXx2-jt3X8uribyOtg_9J-smceAkOoH53lg91w%2526sai%253DAMfl-YTbQkwD3ZU72MnpOVA3IKaeERRAmvkcBfyij2O1Pqj_2bK9z1MnLL_bH_rdx7tSkVSR1F9OsUy60hjUN72xUQhZ_tHcVBhTfhvmFkhT_KdNihwC3GcZAAlxU1EM%2526sig%253DCg0ArKJSzD4pwKULcQkREAE%2526urlfix%253D1%2526adurl%253D&enc=1&fb_url=&ref=dispatch.com&oop=&fb=adventive_htmlx_YP691734_frame&forceFallback=1';
+                var script = document.createElement('SCRIPT');
+                script.type = "text/javascript";
+                script.src = "//ads.adventive.com/ad?" + uri_query + "&fb=" + placement_div.id + "&forceFallback=1";
+                placement_div.appendChild(script);
+                    }
+
+    }
+// }
+
+if(adFrame){
+}
+if (activeLogType !== '') {
+    /* If there is an Out of Page URL provided, then fire the Pixel */
+                    logStat(activeLogType, JSON.stringify(additionalData));
+}
+  })(ns_4_85124_xt768330);

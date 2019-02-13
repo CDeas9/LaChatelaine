@@ -1,0 +1,315 @@
+var ns_1b44dba8f8a5622210c7beb874e82e1d_tg667946 = {};
+
+(function(context) {
+
+    try {
+                var currentScriptNew = document.currentScript || (function() {
+            var scripts = document.getElementsByTagName('script');
+                            for(i = 0;i < scripts.length; i++){
+                    if (scripts[i].src.indexOf("196144ac-4a14-4c38-915b-142ca726f827") !== -1 ) {
+                        if (scripts[i].src.indexOf("1554035263") !== -1 ) {
+                            return scripts[i];
+                        }
+                    }
+                }
+                return scripts[scripts.length - 1];
+                    })();
+        currentScriptNew.id="1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script";
+    } catch(e) { console.log(e); }
+var ieOld = Boolean();
+
+var contextExists = true;
+try { if (context) contextExists = true; } catch(e) { contextExists = false; }
+if (contextExists) context.ieOld = ieOld;
+    var doNotServe = false;
+    /* iFramed used to determine if the ad is in an iframe. */
+    var iFramed = false;
+
+    try {
+        iFramed = (window.self !== window.top);
+    } catch (e) {
+        iFramed = true;
+    }
+
+    
+    try {
+  if (typeof window.inDapIF != 'undefined' && window.inDapIF) {
+    var inFriendlyFrame = true;
+    var ffFound = window.frameElement;     try {
+      if (ffFound) {
+                if (!doNotServe) {
+          var placement_div = document.createElement('div');
+          placement_div.id = 'adventive_htmlx_tg667946_frame';
+          ffFound.parentNode.appendChild(placement_div);
+          var uri_query = 'j&gid=196144ac-4a14-4c38-915b-142ca726f827&sid=721&pcid=51994&cb=1554035263&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjsu0irSjP_PE0Wue1JZCoXZ2V32yQFY1ESvzh2p1q_va0VJW-M1hH9HjjwIDqWQ4esnKpCzS9PpTvh42-m2xrY8sFKQMEghrszfPTvsCT0OohiY6eOq4dqsMt7pO4hWz-q3QgN2xaeUFh8uS34xNTn0LLQSoDkUwNwKvQRQH-5tfUGU57BxIUlyuU4dm2Es3L8pBI8CRIb6e44Fp0XY2QQeBCpMCLsnV8IQwVHKt9h7spDj-yLfxaGkldbzScYYrX6apEXSggHtGITE%2526sai%253DAMfl-YS7x4-4Jp5c_AtdOnqa0mx0o_q6mRs_lXX_9RSDvPynH1i5-595prKGh8vhGHVmw0KyA0OP1A-KlaWKTzj6erw4UMmrscaSJaXF-e1BohgtCT5h7dWhji_7w6nb%2526sig%253DCg0ArKJSzNsnpHskHreMEAE%2526urlfix%253D1%2526adurl%253D&enc=1&fb_url=&ref=dispatch.com&oop=https://securepubads.g.doubleclick.net/pcs/view%3Fxai%3DAKAOjsv3egHpqYv736I7RFeZMA62nRB2b8b-yD3XO_B8M89sENcx_Fetg-FX2Zs2J6Pqe5rsi5mJE99zV88hcG3kVbNFwjptulw3F6Uae8U1Np47vUlq_0AYIuwS2dzFQrsg6IDxvvCAyDJqiFB_-26DGjNB_RiJ2avZfvBWyjjm_zipNyKmqZTQGxd_cWZKSZ2v0FuLOeaUzWejEYmfgkF5bB3WIPBejQDLcRmoloaRFOp2iQwDDCPaki5qCL0ZUHojASx9gmwx-bf5P07NeNzwzqBtYCOTwOibo8xQZQ%26sai%3DAMfl-YQYkOjOrgwnDwmBsQskfpOvflowYAIhgHxBTfeACWP4z5yYR2BQqlKAvPrTLTX6V6d3y0ZlRkQsljNk7WkuOAo1dEbAomjYN3ddpM501o0YnClSGWdxZlFMstHi%26sig%3DCg0ArKJSzIwp5tfV7uW6EAE%26urlfix%3D1%26adurl%3D';
+          var script = document.createElement('script');
+          script.type = 'text/javascript';
+                    script.src = '//ads.adventive.com/ad?' + uri_query + '&fb=' + placement_div.id + '&forceFallback=1';
+          placement_div.appendChild(script);
+          doNotServe = true; 
+                      placement_div.setAttribute('data-fifid', ffFound.id);
+            ffFound.style.maxHeight = '100%';
+                        ffFound.style.pointerEvents = 'none';
+            ffFound.style.left = 0;
+                  }
+      } else {
+        var inFriendlyFrame = false;
+      }
+    } catch(e) {
+      var inFriendlyFrame = false;
+    }
+  }
+} catch(e) { console.log(e); }
+        if (typeof inFriendlyFrame === 'boolean'){
+        if (inFriendlyFrame) {
+            doNotServe = true;         }
+    }
+
+        if ( (!doNotServe) && (iFramed) ) {
+        if (typeof fb_override !== 'undefined') {
+            doNotServe = true;
+            var buster_frame = document.createElement('iframe');
+            buster_frame.src = fb_override + "?j&gid=196144ac-4a14-4c38-915b-142ca726f827&sid=721&pcid=51994&cb=1554035263&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjsu0irSjP_PE0Wue1JZCoXZ2V32yQFY1ESvzh2p1q_va0VJW-M1hH9HjjwIDqWQ4esnKpCzS9PpTvh42-m2xrY8sFKQMEghrszfPTvsCT0OohiY6eOq4dqsMt7pO4hWz-q3QgN2xaeUFh8uS34xNTn0LLQSoDkUwNwKvQRQH-5tfUGU57BxIUlyuU4dm2Es3L8pBI8CRIb6e44Fp0XY2QQeBCpMCLsnV8IQwVHKt9h7spDj-yLfxaGkldbzScYYrX6apEXSggHtGITE%2526sai%253DAMfl-YS7x4-4Jp5c_AtdOnqa0mx0o_q6mRs_lXX_9RSDvPynH1i5-595prKGh8vhGHVmw0KyA0OP1A-KlaWKTzj6erw4UMmrscaSJaXF-e1BohgtCT5h7dWhji_7w6nb%2526sig%253DCg0ArKJSzNsnpHskHreMEAE%2526urlfix%253D1%2526adurl%253D&enc=1&fb_url=&ref=dispatch.com&oop=https://securepubads.g.doubleclick.net/pcs/view%3Fxai%3DAKAOjsv3egHpqYv736I7RFeZMA62nRB2b8b-yD3XO_B8M89sENcx_Fetg-FX2Zs2J6Pqe5rsi5mJE99zV88hcG3kVbNFwjptulw3F6Uae8U1Np47vUlq_0AYIuwS2dzFQrsg6IDxvvCAyDJqiFB_-26DGjNB_RiJ2avZfvBWyjjm_zipNyKmqZTQGxd_cWZKSZ2v0FuLOeaUzWejEYmfgkF5bB3WIPBejQDLcRmoloaRFOp2iQwDDCPaki5qCL0ZUHojASx9gmwx-bf5P07NeNzwzqBtYCOTwOibo8xQZQ%26sai%3DAMfl-YQYkOjOrgwnDwmBsQskfpOvflowYAIhgHxBTfeACWP4z5yYR2BQqlKAvPrTLTX6V6d3y0ZlRkQsljNk7WkuOAo1dEbAomjYN3ddpM501o0YnClSGWdxZlFMstHi%26sig%3DCg0ArKJSzIwp5tfV7uW6EAE%26urlfix%3D1%26adurl%3D";
+            buster_frame.style.border = "0px none";
+            buster_frame.style.display = 'none';
+            document.body.appendChild(buster_frame);
+        }
+    }
+
+    if (!doNotServe) {
+
+        var code =  '';
+        var respConts = [];
+
+        code += 'var ns_1b44dba8f8a5622210c7beb874e82e1d_resp_tg667946 = {}; ';        code += '(function(context) { ';
+        code += 'var inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946=0; ';                    code += ' var rDiv = document.createElement("div"); ';
+            code += '   rDiv.id = "adventive_4_90447_lwrMvhBX"; ';
+            code += '   rDiv.style.display = "none"; ';
+            code += ' var thisScript = document.scripts[document.scripts.length - 1]; ';
+            code += ' if (document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script") !== null) { thisScript = document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script");} ';
+            code += ' var parent = thisScript.parentElement; ';
+                        code += '   parent.appendChild(rDiv); ';
+            respConts.push("adventive_4_90447_lwrMvhBX");
+                    code += ' var rDiv = document.createElement("div"); ';
+            code += '   rDiv.id = "adventive_4_90446_YFPOsMRt"; ';
+            code += '   rDiv.style.display = "none"; ';
+            code += ' var thisScript = document.scripts[document.scripts.length - 1]; ';
+            code += ' if (document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script") !== null) { thisScript = document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script");} ';
+            code += ' var parent = thisScript.parentElement; ';
+                        code += '   parent.appendChild(rDiv); ';
+            respConts.push("adventive_4_90446_YFPOsMRt");
+        
+        code += 'function enquirePollyFillLoaded_1b44dba8f8a5622210c7beb874e82e1d_tg667946(){';
+        code += '        var interval_1b44dba8f8a5622210c7beb874e82e1d_tg667946 = setTimeout(function(){';
+        code += '            try{';
+        code += '                if(LazyLoad){';
+        code += '                    clearInterval(interval_1b44dba8f8a5622210c7beb874e82e1d_tg667946);';
+        code += '                    var arr = ["https://assets.adventivecdn.com/js/media.match.min.js","https://assets.adventivecdn.com/js/enquire.min.js"];';
+        code += '                    LazyLoad.js(arr);';
+        code += '                }';
+        code += '            }catch(e){}';
+        code += '        },100);';
+        code += '}';
+
+        code += 'if (typeof enquire === "undefined") { ';
+                                    code += 'var oopTrack2 = new Image();';
+                code += 'oopTrack2.src = "https://securepubads.g.doubleclick.net/pcs/view?xai=AKAOjsv3egHpqYv736I7RFeZMA62nRB2b8b-yD3XO_B8M89sENcx_Fetg-FX2Zs2J6Pqe5rsi5mJE99zV88hcG3kVbNFwjptulw3F6Uae8U1Np47vUlq_0AYIuwS2dzFQrsg6IDxvvCAyDJqiFB_-26DGjNB_RiJ2avZfvBWyjjm_zipNyKmqZTQGxd_cWZKSZ2v0FuLOeaUzWejEYmfgkF5bB3WIPBejQDLcRmoloaRFOp2iQwDDCPaki5qCL0ZUHojASx9gmwx-bf5P07NeNzwzqBtYCOTwOibo8xQZQ&sai=AMfl-YQYkOjOrgwnDwmBsQskfpOvflowYAIhgHxBTfeACWP4z5yYR2BQqlKAvPrTLTX6V6d3y0ZlRkQsljNk7WkuOAo1dEbAomjYN3ddpM501o0YnClSGWdxZlFMstHi&sig=Cg0ArKJSzIwp5tfV7uW6EAE&urlfix=1&adurl=https://assets.adventivecdn.com/oop/1x1.png";';
+                                    code += 'if("" == "9" || "" == "8"){';
+            code += '        var lazyL = document.createElement("SCRIPT"); ';
+            code += '           lazyL.type = "text/javascript"; ';
+            code += '           lazyL.onload = enquirePollyFillLoaded_1b44dba8f8a5622210c7beb874e82e1d_tg667946(); ';
+            code += '           lazyL.async = false; ';
+            code += '            lazyL.src = "https://assets.adventivecdn.com/js/lazyload.js"; ';
+            code += '        var thisPScript = document.scripts[document.scripts.length - 1]; ';
+            code += '        var pParent = thisPScript.parentElement; ';
+            code += '            pParent.appendChild(lazyL); ';
+            code += '}else{';
+            code += '        var rScript = document.createElement("SCRIPT"); ';
+            code += '            rScript.src = "https://assets.adventivecdn.com/js/enquire.min.js"; ';
+            code += '        var thisScript = document.scripts[document.scripts.length - 1]; ';
+            code += '        var parent = thisScript.parentElement; ';
+                        code += '            parent.appendChild(rScript); ';
+            code += '        var advEnquireCleanup; ';            code += '}';
+
+            code += ' var intVal_enquire_1b44dba8f8a5622210c7beb874e82e1d_tg667946 = setInterval(function(){';
+            code += '  if (typeof enquire == "object") { ';
+            code += '    clearInterval(intVal_enquire_1b44dba8f8a5622210c7beb874e82e1d_tg667946); ';
+                                    code += 'enquire.register("all and (min-width: 426px)", { ';
+                    code += '    deferSetup : true, ';
+                    code += '    setup : function() { ';
+
+                    code += '        console.log(inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946); ';
+                    code += '        console.log("set up (min-width: 426px)"); ';
+                    code += '        var rScript = document.createElement("SCRIPT"); ';
+                    code += '        var rando = Math.random().toString(36).substring(7); ';
+                    code += '        rScript.setAttribute("type", "text/javascript"); ';
+                                                                                                    code += '        if (!inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946){ ';
+                                        code += '           inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946=1; ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=ba4468b12d82d2a015f4ee8b1787bec2&ptag=99b54ce2-3ecb-4d7a-aa1d-68f1b442a6c4&spLoadP=95155&spLoadC=40239&spLoadU=054efc2f-ceee-4d93-9210-fb06b5d28ea0&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90447_lwrMvhBX&initScreen=0&noImp=false&cb=" + rando + "&sid=721&pcid=51994"; ';
+                    code += '        } else { ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=bb8b84de41a1f278c4a57e268012ebd2&ptag=99b54ce2-3ecb-4d7a-aa1d-68f1b442a6c4&spLoadP=95155&spLoadC=40239&spLoadU=054efc2f-ceee-4d93-9210-fb06b5d28ea0&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90447_lwrMvhBX&initScreen=0&forceFallback=1&noImp=77ab6d0d7b2355f1935cd3bec5392a49&cb=" + rando + "&sid=721&pcid=51994"; ';
+                                        code += '        } ';
+                                        code += '        document.getElementById("adventive_4_90447_lwrMvhBX").style.margin = "0 auto"; ';
+                    code += '        document.getElementById("adventive_4_90447_lwrMvhBX").appendChild(rScript); ';
+                    code += '    }, ';
+                    code += '    match : function() { ';
+                    code += '        console.log("match (min-width: 426px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_back").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_close").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_wallpaper").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_top_layer").style.display = "block"; } catch(e){}  ';
+                    code += '        try { var floatingObjects = document.getElementsByClassName("adventive_4_90447_lwrMvhBX_floatingObject_active");for(var i = 0; i < floatingObjects.length; i++) {floatingObjects[i].style.display = "block";}} catch(e){}';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_indicator_holder").style.display = "block"; } catch(e){}  ';
+                    code += '    }, ';
+                    code += '    unmatch : function() { ';
+                    code += '        console.log("unmatch (min-width: 426px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_back").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_close").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_wallpaper").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_top_layer").style.display = "none"; } catch(e){}  ';
+                    code += '        try { var floatingObjects = document.getElementsByClassName("adventive_4_90447_lwrMvhBX_floatingObject_active");for(var i = 0; i < floatingObjects.length; i++) {floatingObjects[i].style.display = "none";}} catch(e){}';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_indicator_holder").style.display = "none"; } catch(e){} ';
+                    code += '        try { if(document.getElementsByTagName("body")[0].hasAttribute("adv_changedsize")) document.getElementsByTagName("body")[0].style.marginTop = document.getElementsByTagName("body")[0].getAttribute("adv_changedsize") } catch(e){} ';
+                    code += '    } ';
+                    code += '}); ';
+                                    code += 'enquire.register("all and (min-width: 1px) and (max-width: 425px)", { ';
+                    code += '    deferSetup : true, ';
+                    code += '    setup : function() { ';
+
+                    code += '        console.log(inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946); ';
+                    code += '        console.log("set up (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        var rScript = document.createElement("SCRIPT"); ';
+                    code += '        var rando = Math.random().toString(36).substring(7); ';
+                    code += '        rScript.setAttribute("type", "text/javascript"); ';
+                                                                                                    code += '        if (!inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946){ ';
+                                        code += '           inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946=1; ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=2586c14e80ba282f1d74e748ad2b1ebb&ptag=e0dd3a32-5f30-4713-8220-0ef3fd9a73a2&spLoadP=95154&spLoadC=40239&spLoadU=854d2a6a-28ed-4a45-b496-2b64363e67e2&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90446_YFPOsMRt&initScreen=0&noImp=false&cb=" + rando + "&sid=721&pcid=51994"; ';
+                    code += '        } else { ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=5a21dfbc1486287be8440128bbdee7a2&ptag=e0dd3a32-5f30-4713-8220-0ef3fd9a73a2&spLoadP=95154&spLoadC=40239&spLoadU=854d2a6a-28ed-4a45-b496-2b64363e67e2&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90446_YFPOsMRt&initScreen=0&forceFallback=1&noImp=73a0acfa43f14b399bba8e78368d6824&cb=" + rando + "&sid=721&pcid=51994"; ';
+                                        code += '        } ';
+                                        code += '        document.getElementById("adventive_4_90446_YFPOsMRt").style.margin = "0 auto"; ';
+                    code += '        document.getElementById("adventive_4_90446_YFPOsMRt").appendChild(rScript); ';
+                    code += '    }, ';
+                    code += '    match : function() { ';
+                    code += '        console.log("match (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_back").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_close").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_wallpaper").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_top_layer").style.display = "block"; } catch(e){}  ';
+                    code += '        try { var floatingObjects = document.getElementsByClassName("adventive_4_90446_YFPOsMRt_floatingObject_active");for(var i = 0; i < floatingObjects.length; i++) {floatingObjects[i].style.display = "block";}} catch(e){}';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_indicator_holder").style.display = "block"; } catch(e){}  ';
+                    code += '    }, ';
+                    code += '    unmatch : function() { ';
+                    code += '        console.log("unmatch (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_back").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_close").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_wallpaper").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_top_layer").style.display = "none"; } catch(e){}  ';
+                    code += '        try { var floatingObjects = document.getElementsByClassName("adventive_4_90446_YFPOsMRt_floatingObject_active");for(var i = 0; i < floatingObjects.length; i++) {floatingObjects[i].style.display = "none";}} catch(e){}';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_indicator_holder").style.display = "none"; } catch(e){} ';
+                    code += '        try { if(document.getElementsByTagName("body")[0].hasAttribute("adv_changedsize")) document.getElementsByTagName("body")[0].style.marginTop = document.getElementsByTagName("body")[0].getAttribute("adv_changedsize") } catch(e){} ';
+                    code += '    } ';
+                    code += '}); ';
+                            code += '  } ';
+            code += '},10); ';
+        code += '}';
+        code += 'else {';
+                            code += 'var oopTrack2 = new Image();';
+                code += 'oopTrack2.src = "https://securepubads.g.doubleclick.net/pcs/view?xai=AKAOjsv3egHpqYv736I7RFeZMA62nRB2b8b-yD3XO_B8M89sENcx_Fetg-FX2Zs2J6Pqe5rsi5mJE99zV88hcG3kVbNFwjptulw3F6Uae8U1Np47vUlq_0AYIuwS2dzFQrsg6IDxvvCAyDJqiFB_-26DGjNB_RiJ2avZfvBWyjjm_zipNyKmqZTQGxd_cWZKSZ2v0FuLOeaUzWejEYmfgkF5bB3WIPBejQDLcRmoloaRFOp2iQwDDCPaki5qCL0ZUHojASx9gmwx-bf5P07NeNzwzqBtYCOTwOibo8xQZQ&sai=AMfl-YQYkOjOrgwnDwmBsQskfpOvflowYAIhgHxBTfeACWP4z5yYR2BQqlKAvPrTLTX6V6d3y0ZlRkQsljNk7WkuOAo1dEbAomjYN3ddpM501o0YnClSGWdxZlFMstHi&sig=Cg0ArKJSzIwp5tfV7uW6EAE&urlfix=1&adurl=https://assets.adventivecdn.com/oop/1x1.png";';
+                                                code += 'enquire.register("all and (min-width: 426px)", { ';
+                    code += '    deferSetup : true, ';
+                    code += '    setup : function() { ';
+
+                    code += '        console.log(inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946); ';
+                    code += '        console.log("set up (min-width: 426px)"); ';
+                    code += '        var rScript = document.createElement("SCRIPT"); ';
+                    code += '        var rando = Math.random().toString(36).substring(7); ';
+                    code += '        rScript.setAttribute("type", "text/javascript"); ';
+                                                                                                    code += '        if (!inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946){ ';
+                                        code += '           inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946=1; ';
+                                         code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=728efba8dd87a18b122bb264e04145ec&ptag=99b54ce2-3ecb-4d7a-aa1d-68f1b442a6c4&spLoadP=95155&spLoadC=40239&spLoadU=054efc2f-ceee-4d93-9210-fb06b5d28ea0&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90447_lwrMvhBX&initScreen=0&noImp=false&cb=" + rando + "&sid=721&pcid=51994"; ';
+                    code += '        } else { ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=8b48826d417e0ce14f28227d1baeb5ba&ptag=99b54ce2-3ecb-4d7a-aa1d-68f1b442a6c4&spLoadP=95155&spLoadC=40239&spLoadU=054efc2f-ceee-4d93-9210-fb06b5d28ea0&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90447_lwrMvhBX&initScreen=0&forceFallback=1&noImp=77ab6d0d7b2355f1935cd3bec5392a49&cb=" + rando + "&sid=721&pcid=51994"; ';
+                                        code += '        } ';
+                                        code += '        document.getElementById("adventive_4_90447_lwrMvhBX").style.margin = "0 auto"; ';
+                    code += '        document.getElementById("adventive_4_90447_lwrMvhBX").appendChild(rScript); ';
+                    code += '    }, ';
+                    code += '    match : function() { ';
+                    code += '        console.log("match (min-width: 426px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_back").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_close").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_wallpaper").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_top_layer").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("indicator_holder_adventive_htmlx_tg667946_90447_lwrMvhBX").style.display = "block"; } catch(e){}  ';
+                    code += '    }, ';
+                    code += '    unmatch : function() { ';
+                    code += '        console.log("unmatch (min-width: 426px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_back").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_close").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_wallpaper").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90447_lwrMvhBX_top_layer").style.display = "none"; } catch(e){}  ';
+                    code += '        try { document.getElementById("indicator_holder_adventive_htmlx_tg667946_90447_lwrMvhBX").style.display = "none"; } catch(e){} ';
+                    code += '    } ';
+                    code += '}); ';
+                                    code += 'enquire.register("all and (min-width: 1px) and (max-width: 425px)", { ';
+                    code += '    deferSetup : true, ';
+                    code += '    setup : function() { ';
+
+                    code += '        console.log(inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946); ';
+                    code += '        console.log("set up (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        var rScript = document.createElement("SCRIPT"); ';
+                    code += '        var rando = Math.random().toString(36).substring(7); ';
+                    code += '        rScript.setAttribute("type", "text/javascript"); ';
+                                                                                                    code += '        if (!inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946){ ';
+                                        code += '           inited_1b44dba8f8a5622210c7beb874e82e1d_tg667946=1; ';
+                                         code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=e227ab88bee11bc4f854abd6d8214702&ptag=e0dd3a32-5f30-4713-8220-0ef3fd9a73a2&spLoadP=95154&spLoadC=40239&spLoadU=854d2a6a-28ed-4a45-b496-2b64363e67e2&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90446_YFPOsMRt&initScreen=0&noImp=false&cb=" + rando + "&sid=721&pcid=51994"; ';
+                    code += '        } else { ';
+                                        code += '           rScript.src = "https://ads.adventive.com/ad?j&spLoad=1&iid=8124de0b6e8b815be4247a2b27fca18d&ptag=e0dd3a32-5f30-4713-8220-0ef3fd9a73a2&spLoadP=95154&spLoadC=40239&spLoadU=854d2a6a-28ed-4a45-b496-2b64363e67e2&click=https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjstjD2qtD2gxec2hRmTqa8-HZJ6Dvro3BYIdqlE6-9j8RY7dXYHPCau3O0c_uyeiSC5anCjuxZ8_KZta0fQbKKvsoi_dfpiOXd7_o1Ey8vLoKwKZ01va0064Y-0TJi-nVfNyiZ-NzSGR6BCrBY9D1h-ieGpzw4F46L8h-OPvYB47_466SAQeR7f6dIMO_Z94sWLM6ZZlx-jv-t2vatShyqjGRkpldZsdG493tlhYfv6nxbFFAVJxbn1sQSS5To3oezAEgg%2526sai%253DAMfl-YRPN_O-n1HzhpePpjOsngJ4jhjOm7AgIOMkBI9kq1fdvDVfDzKKUU0cSQnjcdxPSpgm3XPKDRDbqXxYBwhG8Dk_BdO3QIgjdJoDjxwMWrrZVczXtS_dbdKglAQ%2526sig%253DCg0ArKJSzAcuQL3PGWnAEAE%2526urlfix%253D1%2526adurl%253D&enc=1&type=4&fb=adventive_4_90446_YFPOsMRt&initScreen=0&forceFallback=1&noImp=73a0acfa43f14b399bba8e78368d6824&cb=" + rando + "&sid=721&pcid=51994"; ';
+                                        code += '        } ';
+                                        code += '        document.getElementById("adventive_4_90446_YFPOsMRt").style.margin = "0 auto"; ';
+                    code += '        document.getElementById("adventive_4_90446_YFPOsMRt").appendChild(rScript); ';
+                    code += '    }, ';
+                    code += '    match : function() { ';
+                    code += '        console.log("match (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_back").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_close").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_wallpaper").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_top_layer").style.display = "block"; } catch(e){}  ';
+                    code += '        try { document.getElementById("indicator_holder_adventive_htmlx_tg667946_90446_YFPOsMRt").style.display = "block"; } catch(e){}  ';
+                    code += '    }, ';
+                    code += '    unmatch : function() { ';
+                    code += '        console.log("unmatch (min-width: 1px) and (max-width: 425px)"); ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_back").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_close").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_wallpaper").style.display = "none"; } catch(e){} ';
+                    code += '        try { document.getElementById("adventive_4_90446_YFPOsMRt_top_layer").style.display = "none"; } catch(e){}  ';
+                    code += '        try { document.getElementById("indicator_holder_adventive_htmlx_tg667946_90446_YFPOsMRt").style.display = "none"; } catch(e){} ';
+                    code += '    } ';
+                    code += '}); ';
+                        code += '}';
+        code += '})(ns_1b44dba8f8a5622210c7beb874e82e1d_resp_tg667946); ';
+
+        var thisScript = document.scripts[document.scripts.length - 1];
+        var rScript = document.createElement('SCRIPT');
+            rScript.setAttribute('type', 'text/javascript');
+        var parent = thisScript.parentElement;
+
+        if (document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script") !== null) {
+            parent = document.getElementById("1b44dba8f8a5622210c7beb874e82e1d_tg667946_orig_script").parentNode;
+        }
+
+        
+                ieOld = Boolean("1");
+        ieOld ? rScript.text = code : rScript.innerHTML = code;
+        parent.appendChild(rScript);
+    }
+
+})(ns_1b44dba8f8a5622210c7beb874e82e1d_tg667946);
